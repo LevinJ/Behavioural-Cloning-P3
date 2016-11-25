@@ -8,6 +8,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation
 from sklearn.preprocessing import OneHotEncoder
 from keras.optimizers import Adam
+from sklearn.cross_validation import train_test_split
 
 
 class TrafficeSign(object):
@@ -67,11 +68,45 @@ class TrafficeSign(object):
         print("The training accuracy was: {}".format( history.history['acc']))
         assert(history.history['acc'][0] > 0.5), "The training accuracy was: {}".format( history.history['acc'])
         return
+    def two_layer_net_split(self):
+        model = Sequential()
+        
+        model.add(Dense(128, input_dim=32*32*3,  name="hidden1"))
+        model.add(Activation("relu"))
+        
+        model.add(Dense(output_dim=43,  name="output"))
+        model.add(Activation("softmax"))
+        
+        # STOP: Do not change the tests below. Your implementation should pass these tests.
+        assert(model.get_layer(name="hidden1").input_shape == (None, 32*32*3)), "The input shape is: %s" % model.get_layer(name="hidden1").input_shape
+        assert(model.get_layer(name="output").output_shape == (None, 43)), "The output shape is: %s" % model.get_layer(name="output").output_shape 
+        
+        
+        model.compile(loss='categorical_crossentropy', 
+                      optimizer=Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0),
+                       metrics=['accuracy'])
+        
+        self.X_train, self.X_val, self.y_train, self.y_val = train_test_split(self.X_train, self.y_train, test_size=0.25, random_state=42)
+        
+        self.encoder = OneHotEncoder(sparse=False,n_values = 43).fit(self.y_train)
+
+        y_train_encoded  = self.encoder.transform(self.y_train)
+        y_val_encoded  = self.encoder.transform(self.y_val)
+        
+        history  = model.fit(self.X_train.reshape(-1,32*32*3), y_train_encoded, nb_epoch=2, batch_size=32, verbose=2, 
+                             validation_data=(self.X_val.reshape(-1,32*32*3), y_val_encoded))
+        
+
+        # STOP: Do not change the tests below. Your implementation should pass these tests.
+        assert(round(self.X_train.shape[0] / float(self.X_val.shape[0])) == 3), "The training set is %.3f times larger than the validation set." % self.X_train.shape[0] / float(self.X_val.shape[0])
+        assert(history.history['val_acc'][0] > 0.6), "The validation accuracy is: %.3f" % history.history['val_acc'][0]
+        return
         
     def run(self):
         self.load_data()
         self.normalize_data()
-        self.two_layer_net()
+#         self.two_layer_net()
+        self.two_layer_net_split()
         return
     
 
