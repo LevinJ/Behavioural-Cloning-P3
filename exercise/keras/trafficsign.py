@@ -32,13 +32,18 @@ class TrafficeSign(object):
         assert(self.X_train.shape[1:] == (32,32,3)), "The dimensions of the images are not 32 x 32 x 3."
         return
     def normalize_data(self):
+        
         max = 0.5
         min = -0.5
+        train_min = self.X_train.min()
+        train_max = self.X_train.max()
         self.X_train = self.X_train.astype('float32')
         self.X_test = self.X_test.astype('float32')
-        X_std = (self.X_train - self.X_train.min()) / (self.X_train.max() - self.X_train.min())
-        X_scaled = X_std * (max - min) + min
-        self.X_train = X_scaled
+        #normalize training/val data
+        self.X_train = (self.X_train - train_min) / (train_max - train_min) * (max - min) + min
+        #normalize test data
+        
+        self.X_test = ((self.X_test - train_min) / (train_max - train_min)) * (max - min) + min
         
 #         scaler = MinMaxScaler(feature_range=(-0.5, 0.5))
 #         self.X_train = scaler.fit_transform(self.X_train.ravel())
@@ -107,21 +112,24 @@ class TrafficeSign(object):
         return
     def cnn_net(self):
         model = Sequential()
+        #layer 1
         model.add(Convolution2D(32, 3, 3,
                         border_mode='valid',
                         input_shape=(32,32,3),  name="conv1"))
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D())
+        model.add(Dropout(0.5))
         
+        #layer 2
         model.add(Flatten())
         model.add(Dense(128,  name="hidden1"))
         model.add(Activation("relu"))
         
         
+        #layer 3
         model.add(Dense(output_dim=43,  name="output"))
         model.add(Activation("softmax"))
         
-        # STOP: Do not change the tests below. Your implementation should pass these tests.
-#         assert(model.get_layer(name="hidden1").input_shape == (None, 32*32*3)), "The input shape is: %s" % model.get_layer(name="hidden1").input_shape
-#         assert(model.get_layer(name="output").output_shape == (None, 43)), "The output shape is: %s" % model.get_layer(name="output").output_shape 
         
         
         model.compile(loss='categorical_crossentropy', 
@@ -134,11 +142,18 @@ class TrafficeSign(object):
 
         y_train_encoded  = self.encoder.transform(self.y_train)
         y_val_encoded  = self.encoder.transform(self.y_val)
+        y_test_encoded  = self.encoder.transform(self.y_test)
         
-        history  = model.fit(self.X_train, y_train_encoded, nb_epoch=2, batch_size=32, verbose=2, 
+        history  = model.fit(self.X_train, y_train_encoded, nb_epoch=30, batch_size=32, verbose=2, 
                              validation_data=(self.X_val, y_val_encoded))
         # STOP: Do not change the tests below. Your implementation should pass these tests.
-        assert(history.history['val_acc'][0] > 0.9), "The validation accuracy is: %.3f" % history.history['val_acc'][0]
+        #assert(history.history['val_acc'][0] > 0.9), "The validation accuracy is: %.3f" % history.history['val_acc'][0]
+       
+        _, train_acc = model.evaluate(self.X_train, y_train_encoded, verbose=0)
+        _, val_acc = model.evaluate(self.X_val, y_val_encoded, verbose=0)
+        _, test_acc = model.evaluate(self.X_test, y_test_encoded, verbose=0)
+
+        print('train{:.3f}, val{:.3f}: test{:.3f}'.format(train_acc, val_acc, test_acc))
         return
         
     def run(self):
