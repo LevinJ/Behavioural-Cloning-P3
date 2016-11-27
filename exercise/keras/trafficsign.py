@@ -9,6 +9,10 @@ from keras.layers import Dense, Activation
 from sklearn.preprocessing import OneHotEncoder
 from keras.optimizers import Adam
 from sklearn.cross_validation import train_test_split
+from keras.layers import  Dropout, Flatten
+from keras.layers import Convolution2D, MaxPooling2D
+from keras.utils import np_utils
+from keras import backend as K
 
 
 class TrafficeSign(object):
@@ -101,12 +105,48 @@ class TrafficeSign(object):
         assert(round(self.X_train.shape[0] / float(self.X_val.shape[0])) == 3), "The training set is %.3f times larger than the validation set." % self.X_train.shape[0] / float(self.X_val.shape[0])
         assert(history.history['val_acc'][0] > 0.6), "The validation accuracy is: %.3f" % history.history['val_acc'][0]
         return
+    def cnn_net(self):
+        model = Sequential()
+        model.add(Convolution2D(32, 3, 3,
+                        border_mode='valid',
+                        input_shape=(32,32,3),  name="conv1"))
+        
+        model.add(Flatten())
+        model.add(Dense(128,  name="hidden1"))
+        model.add(Activation("relu"))
+        
+        
+        model.add(Dense(output_dim=43,  name="output"))
+        model.add(Activation("softmax"))
+        
+        # STOP: Do not change the tests below. Your implementation should pass these tests.
+#         assert(model.get_layer(name="hidden1").input_shape == (None, 32*32*3)), "The input shape is: %s" % model.get_layer(name="hidden1").input_shape
+#         assert(model.get_layer(name="output").output_shape == (None, 43)), "The output shape is: %s" % model.get_layer(name="output").output_shape 
+        
+        
+        model.compile(loss='categorical_crossentropy', 
+                      optimizer=Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0),
+                       metrics=['accuracy'])
+        
+        self.X_train, self.X_val, self.y_train, self.y_val = train_test_split(self.X_train, self.y_train, test_size=0.25, random_state=42)
+        
+        self.encoder = OneHotEncoder(sparse=False,n_values = 43).fit(self.y_train)
+
+        y_train_encoded  = self.encoder.transform(self.y_train)
+        y_val_encoded  = self.encoder.transform(self.y_val)
+        
+        history  = model.fit(self.X_train, y_train_encoded, nb_epoch=2, batch_size=32, verbose=2, 
+                             validation_data=(self.X_val, y_val_encoded))
+        # STOP: Do not change the tests below. Your implementation should pass these tests.
+        assert(history.history['val_acc'][0] > 0.9), "The validation accuracy is: %.3f" % history.history['val_acc'][0]
+        return
         
     def run(self):
         self.load_data()
         self.normalize_data()
 #         self.two_layer_net()
-        self.two_layer_net_split()
+#         self.two_layer_net_split()
+        self.cnn_net()
         return
     
 
