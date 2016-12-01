@@ -14,6 +14,7 @@ from keras.layers import Dense, Activation
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.layers.normalization import BatchNormalization
+from keras import callbacks
 
 
 class BCModel(object):
@@ -52,6 +53,16 @@ class BCModel(object):
         
         
         return
+    def gen(self,data, labels, batch_size):
+        start = 0
+        num_total = data.shape[0]
+        while True:
+            end = start + batch_size
+            batch = (data[start:end], labels[start:end])
+            start = end
+            if start >= num_total:
+                start = 0
+            yield batch
     def fine_tune_model(self):
         # create the base pre-trained model
         input_tensor = Input(shape=(160,320,3))
@@ -75,9 +86,21 @@ class BCModel(object):
         for layer in base_model.layers:
             layer.trainable = False
         # compile the model (should be done *after* setting layers to non-trainable)
-        optimizer = Adam(lr=1e-2, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+        optimizer = Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+        tsb = callbacks.TensorBoard(histogram_freq=1)
+        cbks = [tsb]
         model.compile(optimizer=optimizer, loss='mean_squared_error')
-        model.fit(self.X_train, self.y_train, nb_epoch=10, batch_size=64, validation_data=(self.X_val, self.y_val), shuffle=True, verbose=2)
+        
+#         model.fit(self.X_train, self.y_train, nb_epoch=10, batch_size=64, 
+#                   validation_data=None, shuffle=True, verbose=2,
+#                   callbacks=[])
+        batch_size = 64
+        nb_epoch = 10
+        train_gen = self.gen(self.X_train, self.y_train, batch_size)
+        val_gen = self.gen(self.X_val, self.y_val, batch_size)
+        
+        model.fit_generator(train_gen, self.y_train.shape[0], nb_epoch, verbose=2, callbacks=[], 
+                            validation_data=val_gen, nb_val_samples=self.y_val.shape[0])
     
 
         return
