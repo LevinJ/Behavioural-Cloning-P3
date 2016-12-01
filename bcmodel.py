@@ -9,6 +9,9 @@ from keras.applications.vgg16 import preprocess_input
 import numpy as np
 import glob
 import pandas as pd
+from keras.layers import Input, AveragePooling2D,Flatten
+from keras.layers import Dense, Activation
+from keras.models import Model
 
 
 class BCModel(object):
@@ -47,9 +50,35 @@ class BCModel(object):
         
         
         return
+    def fine_tune_model(self):
+        # create the base pre-trained model
+        input_tensor = Input(shape=(160,320,3))
+        base_model = VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
+        # add a global spatial average pooling layer
+        x = base_model.output
+        x = Flatten()(x)
+#         x = GlobalAveragePooling2D()(x)
+        # let's add a fully-connected layer
+        x = Dense(1024, activation='relu')(x)
+        # and a logistic layer -- let's say we have 200 classes
+        predictions = Dense(1)(x)
+        
+        # this is the model we will train
+        model = Model(input=base_model.input, output=predictions)
+        # first: train only the top layers (which were randomly initialized)
+        # i.e. freeze all convolutional InceptionV3 layers
+        for layer in base_model.layers:
+            layer.trainable = False
+        # compile the model (should be done *after* setting layers to non-trainable)
+        model.compile(optimizer='rmsprop', loss='mean_squared_error')
+        model.fit(self.X_train, self.y_train, nb_epoch=10, batch_size=64, validation_data=(self.X_val, self.y_val), shuffle=True, verbose=2)
+    
+
+        return
     def run(self):
         self.load_records()
         self.load_images()
+        self.fine_tune_model()
        
         return
     
