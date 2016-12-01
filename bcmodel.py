@@ -12,6 +12,8 @@ import pandas as pd
 from keras.layers import Input, AveragePooling2D,Flatten
 from keras.layers import Dense, Activation
 from keras.models import Model
+from keras.optimizers import Adam
+from keras.layers.normalization import BatchNormalization
 
 
 class BCModel(object):
@@ -59,6 +61,9 @@ class BCModel(object):
         x = Flatten()(x)
 #         x = GlobalAveragePooling2D()(x)
         # let's add a fully-connected layer
+        x = BatchNormalization()(x)
+        x = Dense(1024, activation='relu')(x)
+        x = BatchNormalization()(x)
         x = Dense(1024, activation='relu')(x)
         # and a logistic layer -- let's say we have 200 classes
         predictions = Dense(1)(x)
@@ -70,7 +75,8 @@ class BCModel(object):
         for layer in base_model.layers:
             layer.trainable = False
         # compile the model (should be done *after* setting layers to non-trainable)
-        model.compile(optimizer='rmsprop', loss='mean_squared_error')
+        optimizer = Adam(lr=1e-2, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+        model.compile(optimizer=optimizer, loss='mean_squared_error')
         model.fit(self.X_train, self.y_train, nb_epoch=10, batch_size=64, validation_data=(self.X_val, self.y_val), shuffle=True, verbose=2)
     
 
