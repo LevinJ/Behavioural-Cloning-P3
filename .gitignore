@@ -1,6 +1,7 @@
 data
 .ipynb_checkpoints
 *.h5
+*.json
 *.swp
 *.p
 *.pyc

@@ -15,6 +15,8 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.layers.normalization import BatchNormalization
 from keras import callbacks
+from keras.models import load_model
+from sklearn.utils import shuffle
 
 
 class BCModel(object):
@@ -50,32 +52,43 @@ class BCModel(object):
         self.X_val= imgs[num_train:]
         self.y_val = self.record_df.iloc[num_train:]['steering_angle'].values
         
+#         self.X_train, self.y_train = shuffle(self.X_train, self.y_train)
+#         self.X_val, self.y_val = shuffle(self.X_val, self.y_val)
+#         
         
         
         return
     def gen(self,data, labels, batch_size):
         start = 0
         num_total = data.shape[0]
+        data, labels = shuffle(data, labels)
         while True:
             end = start + batch_size
             batch = (data[start:end], labels[start:end])
             start = end
             if start >= num_total:
                 start = 0
+                data, labels = shuffle(data, labels)
             yield batch
     def fine_tune_model(self):
         # create the base pre-trained model
         input_tensor = Input(shape=(160,320,3))
         base_model = VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
         # add a global spatial average pooling layer
+#         x = base_model.layers[13].output
         x = base_model.output
         x = Flatten()(x)
 #         x = GlobalAveragePooling2D()(x)
         # let's add a fully-connected layer
         x = BatchNormalization()(x)
-        x = Dense(1024, activation='relu')(x)
+        
+        x = Dense(1024)(x)
         x = BatchNormalization()(x)
-        x = Dense(1024, activation='relu')(x)
+        x = Activation('relu')(x)
+        
+        x = Dense(1024)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
         # and a logistic layer -- let's say we have 200 classes
         predictions = Dense(1)(x)
         
@@ -86,21 +99,49 @@ class BCModel(object):
         for layer in base_model.layers:
             layer.trainable = False
         # compile the model (should be done *after* setting layers to non-trainable)
-        optimizer = Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+        optimizer = Adam(lr=1e-2, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
         tsb = callbacks.TensorBoard(histogram_freq=1)
         cbks = [tsb]
-        model.compile(optimizer=optimizer, loss='mean_squared_error')
-        
-#         model.fit(self.X_train, self.y_train, nb_epoch=10, batch_size=64, 
-#                   validation_data=None, shuffle=True, verbose=2,
-#                   callbacks=[])
         batch_size = 64
         nb_epoch = 10
-        train_gen = self.gen(self.X_train, self.y_train, batch_size)
-        val_gen = self.gen(self.X_val, self.y_val, batch_size)
+        model.compile(optimizer=optimizer, loss='mean_squared_error')
         
-        model.fit_generator(train_gen, self.y_train.shape[0], nb_epoch, verbose=2, callbacks=[], 
-                            validation_data=val_gen, nb_val_samples=self.y_val.shape[0])
+        model.fit(self.X_train, self.y_train, nb_epoch=nb_epoch, batch_size=batch_sizev, 
+                  validation_data=(self.X_val, self.y_val), shuffle=True, verbose=2)
+        
+#         train_gen = self.gen(self.X_train, self.y_train, batch_size)
+#         val_gen = self.gen(self.X_val, self.y_val, batch_size)
+#           
+#         model.fit_generator(train_gen, self.y_train.shape[0], nb_epoch, verbose=2, callbacks=[], 
+#                             validation_data=val_gen, nb_val_samples=self.y_val.shape[0])
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        #now let's do some fine tuning
+        for layer in base_model.layers[15:]:
+            layer.trainable = True
+        
+        
+        
+        optimizer = Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+        nb_epoch = 5
+        model.compile(optimizer=optimizer, loss='mean_squared_error')
+        
+        model.fit(self.X_train, self.y_train, nb_epoch=nb_epoch, batch_size=batch_size, 
+                  validation_data=(self.X_val, self.y_val), shuffle=True, verbose=2)
+
+        
+        with open("model.json", "w") as text_file:
+            text_file.write(model.to_json())
+        model.save_weights('model.h5')
     
 
         return
