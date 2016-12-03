@@ -46,16 +46,14 @@ class BCModel(object):
         
         
         num_train = int(num_sample * 0.75)
+        self.X = imgs
+        self.y = self.record_df['steering_angle'].values
+        
         self.X_train = imgs[:num_train]
         self.y_train = self.record_df.iloc[:num_train]['steering_angle'].values
         
         self.X_val= imgs[num_train:]
         self.y_val = self.record_df.iloc[num_train:]['steering_angle'].values
-        
-#         self.X_train, self.y_train = shuffle(self.X_train, self.y_train)
-#         self.X_val, self.y_val = shuffle(self.X_val, self.y_val)
-#         
-        
         
         return
     def gen(self,data, labels, batch_size):
