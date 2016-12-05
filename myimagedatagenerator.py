@@ -68,7 +68,17 @@ class MyImageDataGenerator(object):
             if start >= num_total:
                 start = 0
                 data, labels = shuffle(data, labels)
-            
+    def transform_image(self, img, label):
+        return img, label   
+    def flip_image(self,img,label):
+        title = "" 
+        if np.random.random() < 0.5:
+            if label != 0.0:
+                img = img.transpose(PIL.Image.FLIP_LEFT_RIGHT)
+                label= -label
+                title = "f"   
+        title = '[' + str(label) + ']' + title
+        return img, label, title
     def preprocess_images(self, image_paths, labels, horizontal_flip, test_gen):
         imgs=[]
         titles = []
@@ -98,28 +108,48 @@ class MyImageDataGenerator(object):
         
         preprocess_input(imgs)
         return (imgs, labels)
-    def test_flip(self):
-        image_path = './data/simulator-linux/IMG/center_2016_12_03_20_31_54_279.jpg'
-        img = image.load_img(image_path)
-        pixels = image.img_to_array(img)
-        test = mpimg.imread(image_path)
-        plt.imshow(test)
-#         plt.imshow(pixels.astype(np.uint8))
-        plt.imshow(pixels)
-#         img = PIL.Image.open('./data/simulator-linux/IMG/center_2016_12_03_20_31_54_279.jpg')
-#         img2 = img.transpose(PIL.Image.FLIP_LEFT_RIGHT)
-#         img2.show()
+   
+    def show_img_compare(self, before_img, before_title, after_img, after_title):
+        _,(ax1,ax2) = plt.subplots(1, 2)
+        ax1.imshow(before_img)
+        ax1.set_title(before_title,loc='left')
+        ax1.grid(False)
+        ax1.set_xticklabels([])
+        ax1.set_yticklabels([])
+        ax2.imshow(after_img)
+        ax2.set_title(after_title,loc='left')
+        ax2.grid(False)
+        ax2.set_xticklabels([])
+        ax2.set_yticklabels([])
+        return
+    def test_transform(self):
+        image_path = './data/simulator-linux/IMG/center_2016_12_05_08_10_30_810.jpg'
+        before_img = image.load_img(image_path)
+        label = 0.899
+        before_title = '[' + str(label) + ']' + os.path.basename(image_path)[-16:-4]
+        
+        after_img, _, after_title = self.flip_image(before_img, label)
+        
+        self.show_img_compare(before_img, before_title, after_img, after_title)
         
         return
             
     
     def run(self):
-        self.test_flip()
+        self.test_transform()
+        plt.show(
+            
+            
+            
+            
+            )
+
         
-        gen = self.generate_batch(self.X, self.y, horizontal_flip=True)
         
-        for item in gen:
-            print(item)
+#         gen = self.generate_batch(self.X, self.y, horizontal_flip=True)
+#         
+#         for item in gen:
+#             print(item)
         
         return
     
