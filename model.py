@@ -58,11 +58,11 @@ class BCModel(object):
         tsb = callbacks.TensorBoard(histogram_freq=1)
         cbks = [tsb]
         batch_size = 16
-        nb_epoch = 2
+        nb_epoch = 1
         model.compile(optimizer=optimizer, loss='mse')
         
         gen = MyImageDataGenerator()
-        train_gen = gen.generate_batch(gen.X_train, gen.y_train, batch_size=32, horizontal_flip=False)
+        train_gen = gen.generate_batch(gen.X_train, gen.y_train, batch_size=32, data_augmentation=False)
         val_gen = gen.generate_batch(gen.X_val, gen.y_val, batch_size=32)
         
         
@@ -76,7 +76,7 @@ class BCModel(object):
         for layer in base_model.layers[15:]:
             layer.trainable = True
         optimizer = Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-        nb_epoch = 3
+        nb_epoch = 1
         model.compile(optimizer=optimizer, loss='mse')
         
         model.fit_generator(train_gen, gen.y_train.shape[0], nb_epoch, verbose=2, callbacks=[], 
