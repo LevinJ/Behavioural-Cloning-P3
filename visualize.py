@@ -21,11 +21,13 @@ class Visualzie(MyImageDataGenerator):
 #         self.record_df = pd.read_csv(filename, header = None, names = column_names)
 #         return
     def show_angle(self):
+        print(self.record_df[['steering_angle']].describe())
         self.record_df[['steering_angle', 'throttle', 'break', 'speed']].plot(subplots=True)
         plt.legend(loc='best')
+        self.record_df[['steering_angle']].hist(bins=20)
         return
     def show_imgs_labels(self):
-        generator = self.generate_batch(self.X, self.y, batch_size=16, horizontal_flip= True, test_gen = True)
+        generator = self.generate_batch(self.X_val, self.y_val, batch_size=16, horizontal_flip= True, test_gen = True)
 #         generator = self.generate_batch(self.X, self.y, batch_size=16, horizontal_flip= False, test_gen = False)
         imgs = []
         labels = []

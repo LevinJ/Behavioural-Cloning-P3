@@ -9,7 +9,7 @@ from sklearn.utils import shuffle
 from keras.preprocessing import image
 import PIL
 import matplotlib.image as mpimg
-from keras.applications.vgg16 import preprocess_input
+from keras.applications.inception_v3 import preprocess_input
 
 
 
@@ -47,7 +47,7 @@ class MyImageDataGenerator(object):
     def split_train_val(self):
         imgs = self.X
         num_sample = self.X.shape[0]
-        num_train = int(num_sample * 0.75)
+        num_train = int(num_sample * 0.9)
         
         self.X_train = imgs[:num_train]
         self.y_train = self.record_df.iloc[:num_train][['steering_angle']].values
