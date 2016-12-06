@@ -75,8 +75,8 @@ class Visualzie(MyImageDataGenerator):
 #         self.show_imgs_labels()
 
 #         self.show_angle()
-#         self.show_prediction()
-        self.test_sample()
+        self.show_prediction()
+#         self.test_sample()
         plt.show()
         return
     

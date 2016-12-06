@@ -22,6 +22,7 @@ class MyImageDataGenerator(object):
         self.load_records()
         self.load_images()
         self.split_train_val()
+        self.input_label_tracking = []
         return
     def load_records(self):
         filename = './data/simulator-linux/driving_log.csv'
@@ -47,7 +48,7 @@ class MyImageDataGenerator(object):
     def split_train_val(self):
         imgs = self.X
         num_sample = self.X.shape[0]
-        num_train = int(num_sample * 0.9)
+        num_train = num_sample - 1000# the last lap for test dataset
         
         _positions = np.random.choice(num_sample, size=10, replace=False)
         self.X_sample = imgs[_positions]
@@ -72,10 +73,18 @@ class MyImageDataGenerator(object):
             if start >= num_total:
                 start = 0
                 data, labels = shuffle(data, labels)
+    
     def transform_image(self, img, label):
-        img, label, title1 = self.flip_image(img, label)
-        img, label, title2 = self.shift_image(img, label, width_shift_range=10)
-        img, label, title3 = self.rotate_image(img, label, rotation_range = 30)
+        title1 = ''
+        title2 = ''
+        title3 = ''
+        #The distribution has zero mean, and the standard deviation is twice 
+        #the standard deviation that we measured with human drivers.
+#         rotation_std = 0.132052  * 180/math.pi  #
+        rotation_std = 0.01  * 180/math.pi  #
+#         img, label, title1 = self.flip_image(img, label)
+#         img, label, title2 = self.shift_image(img, label, width_shift_range=10)
+        img, label, title3 = self.rotate_image(img, label, rotation_std = rotation_std)
         title  = ",".join([title1, title2, title3])
         return img, label, title
     def flip_image(self,img,label):
@@ -87,13 +96,15 @@ class MyImageDataGenerator(object):
                 title = "f_"
         title = title  + str(label)
         return img, label, title
-    def rotate_image(self,img,label, rotation_range = 10):
+    def rotate_image(self,img,label, rotation_std = 15):
         # rotation unit is degree
-        rotation_degree = np.random.uniform(-rotation_range, rotation_range)
+#         rotation_degree = np.random.normal(loc=0.0, scale=rotation_std, size=None)
+        rotation_degree = np.random.uniform(-rotation_std, rotation_std)
     
         img = img.rotate(rotation_degree)
         rotation_radian = math.pi *(rotation_degree/180.0)
         label -= rotation_radian  #PIL 's postive dirction is opposite to that of the game
+        
         title = "r_"  + str(label)[:6]+  ":" + str(rotation_radian)[:6] + ":" + str(rotation_degree)[:6]  
 
         return img, label, title
@@ -127,7 +138,8 @@ class MyImageDataGenerator(object):
                 img, label, title = self.transform_image(img, labels[i])  
                 title = ','.join([str(labels[i]), title, os.path.basename(image_path)[-16:-4]])
                 titles.append(title)
-                labels[i] = label 
+                labels[i] = label
+                self.input_label_tracking.append(label) 
                 
             pixels = keras.preprocessing.image.img_to_array(img)
             imgs.append(pixels)
@@ -154,16 +166,19 @@ class MyImageDataGenerator(object):
         ax2.set_yticklabels([])
         return
     def test_transform(self):
-        image_path = './data/simulator-linux/IMG/center_2016_12_05_08_10_30_810.jpg'
+        image_path = './data/simulator-linux/IMG/center_2016_12_05_20_22_21_004.jpg'
+        label = 0
+        
+        
         before_img = keras.preprocessing.image.load_img(image_path)
-        label = -0.08578777
+        
 
         before_title = '[' + str(label) + ']' + os.path.basename(image_path)[-16:-4]
         
-#         after_img, _, after_title = self.flip_image(before_img, label)
+
         
-#         after_img, _, after_title = self.rotate_image(before_img, label,rotation_range = 60)
-        after_img, _, after_title = self.shift_image(before_img, label)
+        after_img, _, after_title = self.transform_image(before_img, label)
+
         
         self.show_img_compare(before_img, before_title, after_img, after_title)
         
