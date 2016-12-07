@@ -45,6 +45,22 @@ class DataSelection(object):
         self.bin_dict = bin_dict
        
         return
+    def get_next_batch(self, batch_size):
+        num_total = len(self.record_df)
+
+        if self.current_sample_index >= num_total:
+            self.current_sample_index = 0
+        if self.current_sample_index == 0:
+            self.record_df=self.shuffle_records(self.record_df)
+            
+        
+        end = self.current_sample_index + batch_size
+        sample_records = self.record_df.iloc[self.current_sample_index: end]
+        
+        self.current_sample_index = end
+        
+        return sample_records['center_imgage'].values, sample_records['steering_angle'].values
+
     
     def get_next_sample_bybin(self):
        
@@ -90,6 +106,10 @@ class DataSelection(object):
             _, data_label = self.get_next_sample_bybin()
             labels.append(data_label)
         return labels
+    def shuffle_records(self, df):
+        df =  df.iloc[np.random.permutation(len(df))]
+        df = df.reset_index(drop=True)
+        return df 
     def run(self):
         
         #test bin initialization

@@ -53,16 +53,17 @@ class NvidiaModel(object):
     def train_model(self):
         prepare_data = PrepareData()
         batch_size = 16
-        train_gen = prepare_data.get_generator(prepare_data.traindf, select_bybin=True).generate_batch( batch_size=batch_size, data_augmentation= False)
-        val_gen = prepare_data.get_generator(prepare_data.valdf).generate_batch( batch_size=batch_size)
+        train_gen = prepare_data.get_generator(prepare_data.traindf, select_bybin=True)
+        train_gen_func = train_gen.generate_batch( batch_size=batch_size, data_augmentation= False)
+        val_gen_func = prepare_data.get_generator(prepare_data.valdf).generate_batch( batch_size=batch_size)
       
         
         
-        nb_epoch =10
+        nb_epoch =20
         
         #train fully connected layer   
-        self.model.fit_generator(train_gen, prepare_data.y_train.shape[0], nb_epoch, verbose=2, callbacks=[], 
-                            validation_data=val_gen, nb_val_samples=prepare_data.y_val.shape[0])
+        self.model.fit_generator(train_gen_func, prepare_data.y_train.shape[0], nb_epoch, verbose=2, callbacks=[], 
+                            validation_data=val_gen_func, nb_val_samples=prepare_data.y_val.shape[0])
         with open("model.json", "w") as text_file:
             text_file.write(self.model.to_json())
         self.model.save_weights('model.h5')

@@ -28,7 +28,7 @@ class Visualzie(PrepareData):
         return
     def show_imgs_labels(self):
        
-        generator = self.get_generator(self.df, select_bybin=False).generate_batch( batch_size=4, data_augmentation= False, test_gen = True)
+        generator = self.get_generator(self.df, select_bybin=True).generate_batch( batch_size=16, data_augmentation= False, test_gen = True)
 
         imgs = []
         labels = []
@@ -38,8 +38,7 @@ class Visualzie(PrepareData):
         vis_grid_withlabels(imgs, labels)    
         return
     def show_prediction(self):
-        self.load_records()
-        self.load_images()
+
         with open('model.json', 'r') as jfile:
             json_string = jfile.read()
             model = model_from_json(json_string)
@@ -47,7 +46,7 @@ class Visualzie(PrepareData):
         model.compile("adam", "mse")
         model.load_weights('model.h5')
         
-        generator = self.generate_batch(self.X, self.y, batch_size=32)
+        generator = self.get_generator(self.df).generate_batch( batch_size=16)
         val_samples = self.y.shape[0]
         y_prd = model.predict_generator(generator, val_samples)
         self.record_df['steering_angle_pred'] = y_prd.reshape(-1)
@@ -73,10 +72,10 @@ class Visualzie(PrepareData):
         return
     
     def run(self):
-        self.show_imgs_labels()
+#         self.show_imgs_labels()
 
 #         self.show_angle()
-#         self.show_prediction()
+        self.show_prediction()
 #         self.test_sample()
         plt.show()
         return

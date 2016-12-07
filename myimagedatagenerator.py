@@ -51,7 +51,7 @@ class PrepareData(object):
         print("train/val sample number: {}/{}".format(self.y_train.shape[0], self.y_val.shape[0]))
         return
     def get_generator(self, df, select_bybin=False):
-        return  MyImageDataGenerator(self.traindf, select_bybin=select_bybin)
+        return  MyImageDataGenerator(df, select_bybin=select_bybin)
 
 
 class MyImageDataGenerator(object):
@@ -67,14 +67,16 @@ class MyImageDataGenerator(object):
         while True:
             img_paths = []
             labels = []
-            for _ in range(batch_size):
-                if self.select_bybin:
+            if self.select_bybin:
+                for _ in range(batch_size):            
                     img_path, label = self.data_selection.get_next_sample_bybin()
-                else:
-                    img_path, label = self.data_selection.get_next_sample()
-                img_paths.append(img_path)
-                labels.append(label)
-                self.input_label_tracking.append(label)
+                    img_paths.append(img_path)
+                    labels.append(label)
+            else:
+                img_paths, labels = self.data_selection.get_next_batch(batch_size)
+            
+            
+            self.input_label_tracking.extend(labels)
             
             yield self.preprocess_images(np.array(img_paths), np.array(labels), data_augmentation, test_gen)
             
@@ -163,6 +165,7 @@ class MyImageDataGenerator(object):
             imgs = imgs.astype(np.uint8)
             return (imgs, titles)
         else:
+            imgs = imgs.astype(np.float32)
             preprocess_input(imgs)
             return (imgs, labels)
    
