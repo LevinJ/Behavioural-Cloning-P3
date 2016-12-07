@@ -5,15 +5,15 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from myimagedatagenerator import MyImageDataGenerator
+from myimagedatagenerator import PrepareData
 from keras.models import model_from_json
 from utility.vis_utils import vis_grid_withlabels
 
 
 
-class Visualzie(MyImageDataGenerator):
+class Visualzie(PrepareData):
     def __init__(self):
-        MyImageDataGenerator.__init__(self)
+        PrepareData.__init__(self)
         return
 #     def load_records(self):
 #         filename = './data/driving_log.csv'
@@ -27,8 +27,9 @@ class Visualzie(MyImageDataGenerator):
         self.record_df[['steering_angle']].hist(bins=20)
         return
     def show_imgs_labels(self):
-        generator = self.generate_batch(self.X_val, self.y_val, batch_size=4, data_augmentation= True, test_gen = True)
-#         generator = self.generate_batch(self.X, self.y, batch_size=16, horizontal_flip= False, test_gen = False)
+       
+        generator = self.get_generator(self.df, select_bybin=False).generate_batch( batch_size=4, data_augmentation= False, test_gen = True)
+
         imgs = []
         labels = []
         for item in generator:
@@ -72,9 +73,9 @@ class Visualzie(MyImageDataGenerator):
         return
     
     def run(self):
-#         self.show_imgs_labels()
+        self.show_imgs_labels()
 
-        self.show_angle()
+#         self.show_angle()
 #         self.show_prediction()
 #         self.test_sample()
         plt.show()

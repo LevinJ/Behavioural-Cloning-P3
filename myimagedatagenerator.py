@@ -11,69 +11,73 @@ from sklearn.utils import shuffle
 from keras.applications.inception_v3 import preprocess_input
 import math
 import cv2
+from dataselection import DataSelection
 
 
 
-   
-
-
-class MyImageDataGenerator(object):
+class PrepareData(object):
     def __init__(self):
-        self.check_integrity = False
         self.load_records()
-        self.load_images()
         self.split_train_val()
-        self.input_label_tracking = []
-        return
+       
+        return   
     def load_records(self):
-        filename = './data/simulator-linux/driving_log.csv'
+        filename = './data/simulator-linux/driving_log_center.csv'
         column_names=['center_imgage', 'left_image', 'right_image', 'steering_angle', 'throttle', 'break', 'speed']
         self.record_df = pd.read_csv(filename, header = None, names = column_names)
         return
-    def load_images(self):
-        image_paths = glob.glob("./data/simulator-linux/IMG/center_*.jpg")
-        image_paths.sort()
-        
-        #make sure each image has the right label attached
-        if self.check_integrity:
-            num_sample = len(image_paths)
-            for i in range(num_sample):
-                image_path = image_paths[i]
-                image_path_center = self.record_df.iloc[i]['center_imgage']
-                assert os.path.basename(image_path) in image_path_center, "Houston we've got a problem"
 
-        self.X = np.array(image_paths)
-        self.y = self.record_df['steering_angle'].values
-        
-        return
     def split_train_val(self):
-        imgs = self.X
+        self.X = self.record_df['center_imgage'].values
+        self.y = self.record_df['steering_angle'].values
+        self.df = self.record_df
+        
+
         num_sample = self.X.shape[0]
         num_train = num_sample - 1000# the last lap for test dataset
         
         _positions = np.random.choice(num_sample, size=10, replace=False)
-        self.X_sample = imgs[_positions]
+        self.X_sample = self.X[_positions]
         self.y_sample = self.record_df.iloc[_positions]['steering_angle'].values
+        self.sampledf = self.record_df.iloc[_positions]
         
-        self.X_train = imgs[:num_train]
+        self.X_train = self.X[:num_train]
         self.y_train = self.record_df.iloc[:num_train]['steering_angle'].values
+        self.traindf = self.record_df.iloc[:num_train]
         
-        self.X_val= imgs[num_train:]
+        self.X_val= self.X[num_train:]
         self.y_val = self.record_df.iloc[num_train:]['steering_angle'].values
+        self.valdf = self.record_df.iloc[num_train:]
         print("train/val sample number: {}/{}".format(self.y_train.shape[0], self.y_val.shape[0]))
         return
-    def generate_batch(self,data, labels, batch_size=32, data_augmentation= False, test_gen = False):
-        start = 0
-        num_total = data.shape[0]
-        data, labels = shuffle(data, labels)
+    def get_generator(self, df, select_bybin=False):
+        return  MyImageDataGenerator(self.traindf, select_bybin=select_bybin)
+
+
+class MyImageDataGenerator(object):
+    def __init__(self, record_df, select_bybin=False):
+
+        self.data_selection = DataSelection(record_df)
+        self.select_bybin = select_bybin
+        self.input_label_tracking = []
+        return
+    
+    def generate_batch(self, batch_size=32, data_augmentation= False, test_gen = False):
+
         while True:
-            end = start + batch_size
-            yield self.preprocess_images(data[start:end], labels[start:end], data_augmentation, test_gen)
+            img_paths = []
+            labels = []
+            for _ in range(batch_size):
+                if self.select_bybin:
+                    img_path, label = self.data_selection.get_next_sample_bybin()
+                else:
+                    img_path, label = self.data_selection.get_next_sample()
+                img_paths.append(img_path)
+                labels.append(label)
+                self.input_label_tracking.append(label)
             
-            start = end
-            if start >= num_total:
-                start = 0
-                data, labels = shuffle(data, labels)
+            yield self.preprocess_images(np.array(img_paths), np.array(labels), data_augmentation, test_gen)
+            
     
     def transform_image(self, img, label):
         title1 = ''
@@ -87,7 +91,6 @@ class MyImageDataGenerator(object):
 #         img, label, title2 = self.shift_image(img, label, width_shift_range=10)
         img, label, title3 = self.rotate_image(img, label, rotation_range = rotation_range)
         title  = ",".join([title1, title2, title3])
-        img = img[...,::-1] #convert from opencv bgr to standard rgb
         return img, label, title
     def flip_image(self,img,label):
         title = ""
@@ -139,7 +142,7 @@ class MyImageDataGenerator(object):
         imgs=[]
         titles = []
         
-        for i in range(image_paths.shape[0]):
+        for i in range(len(image_paths)):
             image_path = image_paths[i]
             #load the image in PIL format
 #             img = keras.preprocessing.image.load_img(image_path)
@@ -147,9 +150,12 @@ class MyImageDataGenerator(object):
             if data_augmentation:
                 img, label, title = self.transform_image(img, labels[i])  
                 title = ','.join([str(labels[i]), title, os.path.basename(image_path)[-16:-4]])
-                titles.append(title)
                 labels[i] = label
-                self.input_label_tracking.append(label) 
+            else:
+                title = ','.join([str(labels[i]),os.path.basename(image_path)[-16:-4]])
+            titles.append(title)
+
+            img = img[...,::-1] #convert from opencv bgr to standard rgb
             imgs.append(img)
         #output result    
         imgs = np.array(imgs)
@@ -189,6 +195,7 @@ class MyImageDataGenerator(object):
         after_img, _, after_title = self.transform_image(before_img, label)
 
         before_img = before_img[...,::-1] #convert from opencv bgr to standard rgb
+        after_img = after_img[...,::-1] #convert from opencv bgr to standard rgb
         self.show_img_compare(before_img, before_title, after_img, after_title)
         
         return
