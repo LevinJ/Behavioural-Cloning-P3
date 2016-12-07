@@ -1,5 +1,6 @@
 import sys
 import os
+from blaze.expr.expressions import label
 sys.path.insert(0, os.path.abspath('..'))
 
 import pandas as pd
@@ -35,6 +36,7 @@ class DataSelection(object):
             temp.append(item)
         bin_names = temp
         self.current_bin_index = 0
+        self.current_sample_index=0
         bin_dict={}
         
         for bin_name in bin_names:
@@ -49,37 +51,64 @@ class DataSelection(object):
         filename = './data/simulator-linux/driving_log_center.csv'
         column_names=['center_imgage', 'left_image', 'right_image', 'steering_angle', 'throttle', 'break', 'speed']
         self.record_df = pd.read_csv(filename, header = None, names = column_names)
+        self.record_df = self.shuffle_records(self.record_df)
         return
-    def get_next_batch(self, batch_size = 32):
-        data = []
-        labels = []
-        for _ in range(batch_size):
-            current_bin = self.bin_dict[self.bin_names[self.current_bin_index]]
-            self.current_bin_index +=1
-            if self.current_bin_index >= len(self.bin_names):
-                self.current_bin_index = 0
-            sample_index = current_bin.get_next_sample()
-            sample_record = self.record_df.iloc[sample_index]
-            data.append(sample_record['center_imgage'])
-            labels.append(sample_record['steering_angle'])
+    def shuffle_records(self, df):
+        df =  df.iloc[np.random.permutation(len(df))]
+        df = df.reset_index(drop=True)
+        return df 
+    def get_next_sample_bybin(self):
+       
+        current_bin = self.bin_dict[self.bin_names[self.current_bin_index]]
+        self.current_bin_index +=1
+        if self.current_bin_index >= len(self.bin_names):
+            self.current_bin_index = 0
+        sample_index = current_bin.get_next_sample()
+        sample_record = self.record_df.iloc[sample_index]
+        data = sample_record['center_imgage']
+        label = sample_record['steering_angle']
             
-        return data, labels
+        return data, label
+    def get_next_sample(self):
+       
+        sample_record = self.record_df.iloc[self.current_sample_index]
+        
+        self.current_sample_index +=1
+        if self.current_sample_index >= self.record_df.shape[0]:
+            self.current_sample_index = 0
+        
+        
+        data = sample_record['center_imgage']
+        label = sample_record['steering_angle']
+            
+        return data, label
+    
     
     
     
         
- 
+    def test_select_bysample(self):
+        labels = []
+        
+        for i in range(1500):
+            _, data_label = self.get_next_sample()
+            labels.append(data_label)
+        return labels
+    def test_select_bybin(self):
+        labels = []
+        
+        for i in range(1500):
+            _, data_label = self.get_next_sample_bybin()
+            labels.append(data_label)
+        return labels
     def run(self):
         
         #test bin initialization
         for bin_name in self.bin_names:
             print('{}: {}'.format(bin_name, self.bin_dict[bin_name].samples.shape[0]))
         #test next batch
-        labels = []
-        for i in range(500):
-            data, data_labels = self.get_next_batch()
-            labels.extend(data_labels)
-             
+        labels = self.test_select_bybin()
+#         labels = self.test_select_bysample()     
         df = pd.DataFrame(labels, columns=['labels'])
         print(df.describe())
         df.hist()
