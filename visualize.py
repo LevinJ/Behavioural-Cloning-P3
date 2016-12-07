@@ -70,12 +70,25 @@ class Visualzie(PrepareData):
         print(y_prd)
         
         return
+    def show_batched_data_distribution(self):
+        generator = self.get_generator(self.df, select_bybin=True).generate_batch( batch_size=16)
+        num = 0
+        for _, lable_batch in generator:
+            num += 1
+            if num > 100:
+                break
+        
+        df = pd.DataFrame(generator.input_label_tracking, columns=['labels'])
+        print(df.describe())
+        df.hist()
+        return
     
     def run(self):
 #         self.show_imgs_labels()
 
 #         self.show_angle()
-        self.show_prediction()
+#         self.show_prediction()
+        self.show_batched_data_distribution()
 #         self.test_sample()
         plt.show()
         return

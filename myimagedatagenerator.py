@@ -16,16 +16,33 @@ from dataselection import DataSelection
 
 
 class PrepareData(object):
-    def __init__(self):
+    def __init__(self, use_recoverydata = False):
+        self.use_recoverydata = use_recoverydata
         self.load_records()
         self.split_train_val()
+        
        
         return   
     def load_records(self):
-        filename = './data/simulator-linux/driving_log_center.csv'
-        column_names=['center_imgage', 'left_image', 'right_image', 'steering_angle', 'throttle', 'break', 'speed']
-        self.record_df = pd.read_csv(filename, header = None, names = column_names)
+      
+        
+        center_df = self.load_record('./data/simulator-linux/driving_log_center.csv')
+        left_df = self.load_record('./data/simulator-linux/driving_log_center.csv')
+        right_df = self.load_record('./data/simulator-linux/driving_log_center.csv')
+        
+        if not self.use_recoverydata:
+            self.record_df = center_df
+            return
+        left_df = left_df[left_df['steering_angle'] > 0.05]
+        right_df = right_df[right_df['steering_angle'] < -0.05]
+        
+        self.record_df = pd.concat([center_df, left_df, right_df], ignore_index=True)
+        
         return
+    def load_record(self, filename):
+        column_names=['center_imgage', 'left_image', 'right_image', 'steering_angle', 'throttle', 'break', 'speed']
+        df = pd.read_csv(filename, header = None, names = column_names)
+        return df
 
     def split_train_val(self):
         self.X = self.record_df['center_imgage'].values
@@ -34,20 +51,23 @@ class PrepareData(object):
         
 
         num_sample = self.X.shape[0]
-        num_train = num_sample - 1000# the last lap for test dataset
+        num_test = 1000# the last lap for test dataset
+        
+        self.X_val= self.X[:num_test]
+        self.y_val = self.record_df.iloc[:num_test]['steering_angle'].values
+        self.valdf = self.record_df.iloc[:num_test]
+        
+        self.X_train = self.X[num_test:]
+        self.y_train = self.record_df.iloc[num_test:]['steering_angle'].values
+        self.traindf = self.record_df.iloc[num_test:]
+        
+       
         
         _positions = np.random.choice(num_sample, size=10, replace=False)
         self.X_sample = self.X[_positions]
         self.y_sample = self.record_df.iloc[_positions]['steering_angle'].values
         self.sampledf = self.record_df.iloc[_positions]
         
-        self.X_train = self.X[:num_train]
-        self.y_train = self.record_df.iloc[:num_train]['steering_angle'].values
-        self.traindf = self.record_df.iloc[:num_train]
-        
-        self.X_val= self.X[num_train:]
-        self.y_val = self.record_df.iloc[num_train:]['steering_angle'].values
-        self.valdf = self.record_df.iloc[num_train:]
         print("train/val sample number: {}/{}".format(self.y_train.shape[0], self.y_val.shape[0]))
         return
     def get_generator(self, df, select_bybin=False):
