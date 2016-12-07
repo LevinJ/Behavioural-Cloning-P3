@@ -22,11 +22,9 @@ class Bin(object):
         return np.random.choice(self.samples)
 
 class DataSelection(object):
-    def __init__(self):
-        self.load_records()
-#         bin_names = ['1.1:0.6','0.6:0.4','0.4:0.2','0.2:0.001', 
-#                      '0.001:-0.001',
-#                      '-0.001:-0.1','-0.1:-0.2','-0.2:-0.3' ,'-0.3:-0.4','-0.4:-0.5','-0.5:-0.6','-0.6:-1.1']
+    def __init__(self, record_df):
+        self.record_df = record_df
+
         bin_names = ['1.1','0.6','0.4','0.2', 
                      '0.001','-0.001',
                      '-0.1','-0.2' ,'-0.3','-0.4','-0.5','-0.6', '-1.1']
@@ -47,16 +45,7 @@ class DataSelection(object):
         self.bin_dict = bin_dict
        
         return
-    def load_records(self):
-        filename = './data/simulator-linux/driving_log_center.csv'
-        column_names=['center_imgage', 'left_image', 'right_image', 'steering_angle', 'throttle', 'break', 'speed']
-        self.record_df = pd.read_csv(filename, header = None, names = column_names)
-        self.record_df = self.shuffle_records(self.record_df)
-        return
-    def shuffle_records(self, df):
-        df =  df.iloc[np.random.permutation(len(df))]
-        df = df.reset_index(drop=True)
-        return df 
+    
     def get_next_sample_bybin(self):
        
         current_bin = self.bin_dict[self.bin_names[self.current_bin_index]]
@@ -107,8 +96,8 @@ class DataSelection(object):
         for bin_name in self.bin_names:
             print('{}: {}'.format(bin_name, self.bin_dict[bin_name].samples.shape[0]))
         #test next batch
-        labels = self.test_select_bybin()
-#         labels = self.test_select_bysample()     
+#         labels = self.test_select_bybin()
+        labels = self.test_select_bysample()     
         df = pd.DataFrame(labels, columns=['labels'])
         print(df.describe())
         df.hist()
@@ -119,7 +108,18 @@ class DataSelection(object):
         return
     
 
-
+def shuffle_records(df):
+    df =  df.iloc[np.random.permutation(len(df))]
+    df = df.reset_index(drop=True)
+    return df 
+def load_records():
+    filename = './data/simulator-linux/driving_log_center.csv'
+    column_names=['center_imgage', 'left_image', 'right_image', 'steering_angle', 'throttle', 'break', 'speed']
+    record_df = pd.read_csv(filename, header = None, names = column_names)
+    record_df = shuffle_records(record_df)
+    return record_df
+    
 if __name__ == "__main__":   
-    obj= DataSelection()
+    record_df = load_records()
+    obj= DataSelection(record_df)
     obj.run()
