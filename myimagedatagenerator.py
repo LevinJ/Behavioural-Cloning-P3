@@ -6,10 +6,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn.utils import shuffle
-import keras.preprocessing.image
-import PIL
+# import keras.preprocessing.image
+# import PIL
 from keras.applications.inception_v3 import preprocess_input
 import math
+import cv2
 
 
 
@@ -80,28 +81,36 @@ class MyImageDataGenerator(object):
         title3 = ''
         #The distribution has zero mean, and the standard deviation is twice 
         #the standard deviation that we measured with human drivers.
-#         rotation_std = 0.132052  * 180/math.pi  #
-        rotation_std = 0.01  * 180/math.pi  #
+#         rotation_range = 0.132052  * 180/math.pi  #
+        rotation_range = 0.1  * 180/math.pi  #
 #         img, label, title1 = self.flip_image(img, label)
 #         img, label, title2 = self.shift_image(img, label, width_shift_range=10)
-        img, label, title3 = self.rotate_image(img, label, rotation_std = rotation_std)
+        img, label, title3 = self.rotate_image(img, label, rotation_range = rotation_range)
         title  = ",".join([title1, title2, title3])
+        img = img[...,::-1] #convert from opencv bgr to standard rgb
         return img, label, title
     def flip_image(self,img,label):
         title = ""
-        if np.random.random() < 0.5:
-            if label != 0.0:
-                img = img.transpose(PIL.Image.FLIP_LEFT_RIGHT)
-                label= -label
-                title = "f_"
-        title = title  + str(label)
+#         if np.random.random() < 0.5:
+#             if label != 0.0:
+#                 img = img.transpose(PIL.Image.FLIP_LEFT_RIGHT)
+#                 label= -label
+#                 title = "f_"
+#         title = title  + str(label)
         return img, label, title
-    def rotate_image(self,img,label, rotation_std = 15):
+    def rotate_image(self,img,label, rotation_range = 15):
         # rotation unit is degree
-#         rotation_degree = np.random.normal(loc=0.0, scale=rotation_std, size=None)
-        rotation_degree = np.random.uniform(-rotation_std, rotation_std)
+#         rotation_degree = np.random.normal(loc=0.0, scale=rotation_range, size=None)
+        
+        rotation_degree = np.random.uniform(-rotation_range, rotation_range)
+        rotation_degree = 0.1  * 180/math.pi
     
-        img = img.rotate(rotation_degree)
+        
+        rows,cols, _ = img.shape
+        M = cv2.getRotationMatrix2D((cols/2,rows),rotation_degree, 1)
+        img = cv2.warpAffine(img,M,(cols,rows), borderMode=cv2.BORDER_REPLICATE)
+#         img = cv2.warpAffine(img,M,(cols,rows))
+        
         rotation_radian = math.pi *(rotation_degree/180.0)
         label -= rotation_radian  #PIL 's postive dirction is opposite to that of the game
         
@@ -112,16 +121,16 @@ class MyImageDataGenerator(object):
         # rotation unit is degree
         shift = np.random.uniform(-width_shift_range, width_shift_range)
 
-        a = 1
-        b = 0
-        c = shift #left/right (i.e. 5/-5)
-        d = 0
-        e = 1
-        f = 0 #up/down (i.e. 5/-5)
-    
-        img = img.transform(img.size, PIL.Image.AFFINE, (a, b, c, d, e, f))
-        
-        label = label - 0.2 * abs(label)*shift/width_shift_range  #PIL 's postive dirction is opposite to that of the game
+#         a = 1
+#         b = 0
+#         c = shift #left/right (i.e. 5/-5)
+#         d = 0
+#         e = 1
+#         f = 0 #up/down (i.e. 5/-5)
+#     
+#         img = img.transform(img.size, PIL.Image.AFFINE, (a, b, c, d, e, f))
+#         
+#         label = label - 0.2 * abs(label)*shift/width_shift_range  #PIL 's postive dirction is opposite to that of the game
         
         title = "s_"  + str(label)[:6]+ ":" + str(shift)[:6]
 
@@ -133,16 +142,15 @@ class MyImageDataGenerator(object):
         for i in range(image_paths.shape[0]):
             image_path = image_paths[i]
             #load the image in PIL format
-            img = keras.preprocessing.image.load_img(image_path)
+#             img = keras.preprocessing.image.load_img(image_path)
+            img = cv2.imread(image_path, cv2.IMREAD_COLOR)
             if data_augmentation:
                 img, label, title = self.transform_image(img, labels[i])  
                 title = ','.join([str(labels[i]), title, os.path.basename(image_path)[-16:-4]])
                 titles.append(title)
                 labels[i] = label
                 self.input_label_tracking.append(label) 
-                
-            pixels = keras.preprocessing.image.img_to_array(img)
-            imgs.append(pixels)
+            imgs.append(img)
         #output result    
         imgs = np.array(imgs)
         if test_gen:
@@ -166,11 +174,12 @@ class MyImageDataGenerator(object):
         ax2.set_yticklabels([])
         return
     def test_transform(self):
-        image_path = './data/simulator-linux/IMG/center_2016_12_05_20_22_21_004.jpg'
-        label = 0
+        image_path = './data/simulator-linux/IMG/center_2016_12_07_07_47_18_809.jpg'
+        label = -0.04257631
         
         
-        before_img = keras.preprocessing.image.load_img(image_path)
+#         before_img = keras.preprocessing.image.load_img(image_path)
+        before_img = cv2.imread(image_path, cv2.IMREAD_COLOR)
         
 
         before_title = '[' + str(label) + ']' + os.path.basename(image_path)[-16:-4]
@@ -179,7 +188,7 @@ class MyImageDataGenerator(object):
         
         after_img, _, after_title = self.transform_image(before_img, label)
 
-        
+        before_img = before_img[...,::-1] #convert from opencv bgr to standard rgb
         self.show_img_compare(before_img, before_title, after_img, after_title)
         
         return
