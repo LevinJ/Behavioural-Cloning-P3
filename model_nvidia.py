@@ -53,13 +53,13 @@ class NvidiaModel(object):
     def train_model(self):
         prepare_data = PrepareData(use_recoverydata = True)
         batch_size = 16
-        train_gen = prepare_data.get_generator(prepare_data.traindf, select_bybin=True)
+        train_gen = prepare_data.get_generator(prepare_data.traindf, select_bybin=False)
         train_gen_func = train_gen.generate_batch( batch_size=batch_size, data_augmentation= False)
         val_gen_func = prepare_data.get_generator(prepare_data.valdf).generate_batch( batch_size=batch_size)
       
         
         
-        nb_epoch =20
+        nb_epoch =5
         
         #train fully connected layer   
         self.model.fit_generator(train_gen_func, prepare_data.y_train.shape[0], nb_epoch, verbose=2, callbacks=[], 
@@ -71,7 +71,7 @@ class NvidiaModel(object):
         #tracing input data label
         input_label = pd.DataFrame(train_gen.input_label_tracking, columns=['steering_angle'])
         print(input_label.describe())
-        input_label.hist()
+        input_label.hist(bins=20)
         plt.show()
         return
     

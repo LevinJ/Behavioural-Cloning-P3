@@ -97,10 +97,17 @@ class DataSelection(object):
             _, data_label = self.get_next_sample()
             labels.append(data_label)
         return labels
-    def test_select_bybin(self):
+    def test_get_next_batch(self):
         labels = []
         
         for i in range(1500):
+            _, data_label = self.get_next_batch(batch_size = 16)
+            labels.extend(data_label)
+        return labels
+    def test_select_bybin(self):
+        labels = []
+        
+        for i in range(20000):
             _, data_label = self.get_next_sample_bybin()
             labels.append(data_label)
         return labels
@@ -117,11 +124,11 @@ class DataSelection(object):
         for i in range(len(self.bin_names)):
             print('{}: {}, {:.2f}'.format(self.bin_names[i], bin_sample_num[i], bin_sample_num[i]/float(sum(bin_sample_num))))
         #test next batch
-        labels = self.test_select_bybin()
-#         labels = self.test_select_bysample()     
+#         labels = self.test_select_bybin()
+        labels = self.test_get_next_batch()     
         df = pd.DataFrame(labels, columns=['labels'])
         print(df.describe())
-        df.hist()
+        df.hist(bins=20)
         plt.show()
             
             

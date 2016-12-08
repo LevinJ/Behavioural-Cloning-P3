@@ -23,13 +23,13 @@ class Visualzie(PrepareData):
 #         return
     def show_angle(self):
         print(self.record_df[['steering_angle']].describe())
-        self.record_df[['steering_angle', 'throttle', 'break', 'speed']].plot(subplots=True)
+#         self.record_df[['steering_angle']].plot()
         plt.legend(loc='best')
-        self.record_df[['steering_angle']].hist(bins=20)
+        self.record_df[['steering_angle']].hist()
         return
     def show_imgs_labels(self):
-        generator = self.get_generator(self.df, select_bybin=True)
-        generator_func = generator.generate_batch( batch_size=16, data_augmentation= False, test_gen = True)
+        generator = self.get_generator(self.df, select_bybin=False)
+        generator_func = generator.generate_batch( batch_size=4, data_augmentation= False, test_gen = True)
 
 
         imgs = []
@@ -102,7 +102,8 @@ class Visualzie(PrepareData):
         ax.set_yticklabels([])
         return
     def show_side_images(self):
-        center_img_path = './data/simulator-linux/IMG/center_2016_12_05_20_23_42_372.jpg'
+#         center_img_path = './data/simulator-linux/IMG/center_2016_12_05_20_26_51_925.jpg'
+        center_img_path = '/home/levin/workspace/carnd/behavioural-cloning-p3/data/simulator-linux/IMG/center_2016_12_05_20_26_51_925.jpg'
       
         
         left_img_path = center_img_path.replace('center', 'left')
@@ -121,11 +122,11 @@ class Visualzie(PrepareData):
         return
     
     def run(self):
-        self.show_side_images()
+#         self.show_side_images()
 #         self.show_image()
 #         self.show_imgs_labels()
 
-#         self.show_angle()
+        self.show_angle()
 #         self.show_prediction()
 #         self.show_batched_data_distribution()
 #         self.test_sample()

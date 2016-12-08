@@ -45,6 +45,7 @@ class PrepareData(object):
         resdf['steering_angle'] = resdf['steering_angle'] + ajust_angel
         current_column_name = resdf.columns.values[0]
         resdf=resdf.rename(columns = {current_column_name:'center_image'})
+        resdf['center_image'] = resdf['center_image'].str.replace(' ', '')
         return resdf
     def add_side_images_records(self):
         #ceter image with zero, left and right side images
@@ -168,15 +169,16 @@ class DataAugmentation(object):
         
         for i in range(len(image_paths)):
             image_path = image_paths[i]
+            
             #load the image in PIL format
 #             img = keras.preprocessing.image.load_img(image_path)
             img = cv2.imread(image_path, cv2.IMREAD_COLOR)
             if data_augmentation:
                 img, label, title = self.transform_image(img, labels[i])  
-                title = ','.join([str(labels[i]), title, os.path.basename(image_path)[-16:-4]])
+                title = ','.join([str(labels[i]), title, os.path.basename(image_path)[:-4]])
                 labels[i] = label
             else:
-                title = ','.join([str(labels[i]),os.path.basename(image_path)[-16:-4]])
+                title = ','.join([str(labels[i]),os.path.basename(image_path)[:-4]])
             titles.append(title)
 
             img = img[...,::-1] #convert from opencv bgr to standard rgb
