@@ -33,8 +33,8 @@ class PrepareData(object):
         if not self.use_recoverydata:
             self.record_df = center_df
             return
-        left_df = left_df[left_df['steering_angle'] > 0.05]
-        right_df = right_df[right_df['steering_angle'] < -0.05]
+        left_df = left_df[left_df['steering_angle'] > 0]
+        right_df = right_df[right_df['steering_angle'] < 0]
         
         self.record_df = pd.concat([center_df, left_df, right_df], ignore_index=True)
         
@@ -51,7 +51,7 @@ class PrepareData(object):
         
 
         num_sample = self.X.shape[0]
-        num_test = 1000# the last lap for test dataset
+        num_test = 100# the last lap for test dataset
         
         self.X_val= self.X[:num_test]
         self.y_val = self.record_df.iloc[:num_test]['steering_angle'].values

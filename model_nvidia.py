@@ -51,7 +51,7 @@ class NvidiaModel(object):
         return
     
     def train_model(self):
-        prepare_data = PrepareData()
+        prepare_data = PrepareData(use_recoverydata = True)
         batch_size = 16
         train_gen = prepare_data.get_generator(prepare_data.traindf, select_bybin=True)
         train_gen_func = train_gen.generate_batch( batch_size=batch_size, data_augmentation= False)

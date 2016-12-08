@@ -25,15 +25,16 @@ class DataSelection(object):
     def __init__(self, record_df):
         self.record_df = record_df
 
-        bin_names = ['1.1','0.6','0.4','0.2', 
-                     '0.001','-0.001',
-                     '-0.1','-0.2' ,'-0.3','-0.4','-0.5','-0.6', '-1.1']
+        bin_names = ['1.1',
+                     '0.000001','-0.000001',
+                    '-1.1']
+        self.bin_probablity = [0.4, 0.2, 0.4]
         temp = []
         for i in range(len(bin_names) -1):
             item = '/'.join([bin_names[i+1], bin_names[i]])
             temp.append(item)
         bin_names = temp
-        self.current_bin_index = 0
+#         self.current_bin_index = 0
         self.current_sample_index=0
         bin_dict={}
         
@@ -64,16 +65,12 @@ class DataSelection(object):
     
     def get_next_sample_bybin(self):
        
-        current_bin = self.bin_dict[self.bin_names[self.current_bin_index]]
-        self.current_bin_index +=1
-        if self.current_bin_index >= len(self.bin_names):
-            self.current_bin_index = 0
+        current_bin = self.bin_dict[np.random.choice(self.bin_names, p=self.bin_probablity)]
+       
         sample_index = current_bin.get_next_sample()
         sample_record = self.record_df.iloc[sample_index]
-        data = sample_record['center_imgage']
-        label = sample_record['steering_angle']
-            
-        return data, label
+
+        return sample_record['center_imgage'], sample_record['steering_angle']
     def get_next_sample(self):
        
         sample_record = self.record_df.iloc[self.current_sample_index]
@@ -116,8 +113,8 @@ class DataSelection(object):
         for bin_name in self.bin_names:
             print('{}: {}'.format(bin_name, self.bin_dict[bin_name].samples.shape[0]))
         #test next batch
-#         labels = self.test_select_bybin()
-        labels = self.test_select_bysample()     
+        labels = self.test_select_bybin()
+#         labels = self.test_select_bysample()     
         df = pd.DataFrame(labels, columns=['labels'])
         print(df.describe())
         df.hist()

@@ -8,12 +8,13 @@ import pandas as pd
 from myimagedatagenerator import PrepareData
 from keras.models import model_from_json
 from utility.vis_utils import vis_grid_withlabels
+import cv2
 
 
 
 class Visualzie(PrepareData):
     def __init__(self):
-        PrepareData.__init__(self)
+        PrepareData.__init__(self, use_recoverydata = True)
         return
 #     def load_records(self):
 #         filename = './data/driving_log.csv'
@@ -27,12 +28,13 @@ class Visualzie(PrepareData):
         self.record_df[['steering_angle']].hist(bins=20)
         return
     def show_imgs_labels(self):
-       
-        generator = self.get_generator(self.df, select_bybin=True).generate_batch( batch_size=16, data_augmentation= False, test_gen = True)
+        generator = self.get_generator(self.df, select_bybin=True)
+        generator_func = generator.generate_batch( batch_size=16, data_augmentation= False, test_gen = True)
+
 
         imgs = []
         labels = []
-        for item in generator:
+        for item in generator_func:
             imgs,labels = item
             break
         vis_grid_withlabels(imgs, labels)    
@@ -71,9 +73,10 @@ class Visualzie(PrepareData):
         
         return
     def show_batched_data_distribution(self):
-        generator = self.get_generator(self.df, select_bybin=True).generate_batch( batch_size=16)
+        generator = self.get_generator(self.df, select_bybin=False)
+        generator_fun = generator.generate_batch( batch_size=16)
         num = 0
-        for _, lable_batch in generator:
+        for _, _ in generator_fun:
             num += 1
             if num > 100:
                 break
@@ -82,13 +85,30 @@ class Visualzie(PrepareData):
         print(df.describe())
         df.hist()
         return
+    def show_image(self):
+        image_path = './data/simulator-linux/IMG/right_2016_12_07_08_03_54_837.jpg'
+        
+        before_img = cv2.imread(image_path, cv2.IMREAD_COLOR)
+        label = 1
+        before_title = str(label) + "  " + image_path
+        
+
+        before_img = before_img[...,::-1] #convert from opencv bgr to standard rgb
+        ax = plt.gca()
+        ax.imshow(before_img)
+        ax.set_title(before_title,loc='left')
+        ax.grid(False)
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        return
     
     def run(self):
+#         self.show_image()
 #         self.show_imgs_labels()
 
-#         self.show_angle()
+        self.show_angle()
 #         self.show_prediction()
-        self.show_batched_data_distribution()
+#         self.show_batched_data_distribution()
 #         self.test_sample()
         plt.show()
         return
