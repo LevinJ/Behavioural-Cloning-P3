@@ -61,17 +61,18 @@ class PrepareData(object):
         center_positive_right = self.record_df[self.record_df['steering_angle'] > 0][['right_image', 'steering_angle']]
         center_positive_right = self.get_sideimaegdf(center_positive_right, 0.08)
         
-        self.record_df = self.record_df[['center_imgage', 'steering_angle']]
+        self.record_df = self.record_df[['center_image', 'steering_angle']]
         #append left side images data
         self.record_df = pd.concat([self.record_df, center_zero_left, center_zero_right, center_negative_left, center_positive_right], ignore_index=False)
+        self.record_df.to_csv('./data/validrecords.csv')
         return
     def load_record(self, filename):
-        column_names=['center_imgage', 'left_image', 'right_image', 'steering_angle', 'throttle', 'break', 'speed']
+        column_names=['center_image', 'left_image', 'right_image', 'steering_angle', 'throttle', 'break', 'speed']
         df = pd.read_csv(filename, header = None, names = column_names)
         return df
 
     def split_train_val(self):
-        self.X = self.record_df['center_imgage'].values
+        self.X = self.record_df['center_image'].values
         self.y = self.record_df['steering_angle'].values
         self.df = self.record_df
         

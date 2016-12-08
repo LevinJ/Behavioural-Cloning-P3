@@ -23,7 +23,7 @@ class Bin(object):
 
 class DataSelection(object):
     def __init__(self, record_df):
-        #record_df, data frame with center_imgage and steering_angle column
+        #record_df, data frame with center_image and steering_angle column
         self.record_df = record_df
 
         bin_names = ['1.1',
@@ -61,7 +61,7 @@ class DataSelection(object):
         
         self.current_sample_index = end
         
-        return sample_records['center_imgage'].values, sample_records['steering_angle'].values
+        return sample_records['center_image'].values, sample_records['steering_angle'].values
 
     
     def get_next_sample_bybin(self):
@@ -71,7 +71,7 @@ class DataSelection(object):
         sample_index = current_bin.get_next_sample()
         sample_record = self.record_df.iloc[sample_index]
 
-        return sample_record['center_imgage'], sample_record['steering_angle']
+        return sample_record['center_image'], sample_record['steering_angle']
     def get_next_sample(self):
        
         sample_record = self.record_df.iloc[self.current_sample_index]
@@ -81,7 +81,7 @@ class DataSelection(object):
             self.current_sample_index = 0
         
         
-        data = sample_record['center_imgage']
+        data = sample_record['center_image']
         label = sample_record['steering_angle']
             
         return data, label
