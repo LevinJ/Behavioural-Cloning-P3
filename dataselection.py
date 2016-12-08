@@ -110,8 +110,11 @@ class DataSelection(object):
     def run(self):
         
         #test bin initialization
+        bin_sample_num = []
         for bin_name in self.bin_names:
-            print('{}: {}'.format(bin_name, self.bin_dict[bin_name].samples.shape[0]))
+            bin_sample_num.append(self.bin_dict[bin_name].samples.shape[0])
+        for i in range(len(self.bin_names)):
+            print('{}: {}, {:.2f}'.format(self.bin_names[i], bin_sample_num[i], bin_sample_num[i]/float(sum(bin_sample_num))))
         #test next batch
         labels = self.test_select_bybin()
 #         labels = self.test_select_bysample()     
@@ -124,19 +127,9 @@ class DataSelection(object):
        
         return
     
-
-def shuffle_records(df):
-    df =  df.iloc[np.random.permutation(len(df))]
-    df = df.reset_index(drop=True)
-    return df 
-def load_records():
-    filename = './data/simulator-linux/driving_log_center.csv'
-    column_names=['center_imgage', 'left_image', 'right_image', 'steering_angle', 'throttle', 'break', 'speed']
-    record_df = pd.read_csv(filename, header = None, names = column_names)
-    record_df = shuffle_records(record_df)
-    return record_df
     
 if __name__ == "__main__":   
-    record_df = load_records()
-    obj= DataSelection(record_df)
+    from myimagedatagenerator import PrepareData
+    prepare_data = PrepareData()
+    obj= DataSelection(prepare_data.df)
     obj.run()
