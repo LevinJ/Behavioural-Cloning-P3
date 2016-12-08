@@ -73,34 +73,9 @@ class PrepareData(object):
     def get_generator(self, df, select_bybin=False):
         return  MyImageDataGenerator(df, select_bybin=select_bybin)
 
-
-class MyImageDataGenerator(object):
-    def __init__(self, record_df, select_bybin=False):
-
-        self.data_selection = DataSelection(record_df)
-        self.select_bybin = select_bybin
-        self.input_label_tracking = []
+class DataAugmentation(object):
+    def __init__(self):
         return
-    
-    def generate_batch(self, batch_size=32, data_augmentation= False, test_gen = False):
-
-        while True:
-            img_paths = []
-            labels = []
-            if self.select_bybin:
-                for _ in range(batch_size):            
-                    img_path, label = self.data_selection.get_next_sample_bybin()
-                    img_paths.append(img_path)
-                    labels.append(label)
-            else:
-                img_paths, labels = self.data_selection.get_next_batch(batch_size)
-            
-            
-            self.input_label_tracking.extend(labels)
-            
-            yield self.preprocess_images(np.array(img_paths), np.array(labels), data_augmentation, test_gen)
-            
-    
     def transform_image(self, img, label):
         title1 = ''
         title2 = ''
@@ -203,7 +178,7 @@ class MyImageDataGenerator(object):
         ax2.set_yticklabels([])
         return
     def test_transform(self):
-        image_path = './data/simulator-linux/IMG/center_2016_12_07_07_47_18_809.jpg'
+        image_path = './data/simulator-linux/IMG/center_2016_12_05_20_22_20_097.jpg'
         label = -0.04257631
         
         
@@ -222,23 +197,42 @@ class MyImageDataGenerator(object):
         self.show_img_compare(before_img, before_title, after_img, after_title)
         
         return
-            
-    
+
     def run(self):
         self.test_transform()
-        plt.show()
-
-        
-        
-#         gen = self.generate_batch(self.X, self.y, horizontal_flip=True)
-#         
-#         for item in gen:
-#             print(item)
-        
+        plt.show()      
         return
     
+    
+class MyImageDataGenerator(object):
+    def __init__(self, record_df, select_bybin=False):
 
+        self.data_selection = DataSelection(record_df)
+        self.select_bybin = select_bybin
+        self.input_label_tracking = []
+        self.data_aug = DataAugmentation()
+        return
+    
+    def generate_batch(self, batch_size=32, data_augmentation= False, test_gen = False):
+
+        while True:
+            img_paths = []
+            labels = []
+            if self.select_bybin:
+                for _ in range(batch_size):            
+                    img_path, label = self.data_selection.get_next_sample_bybin()
+                    img_paths.append(img_path)
+                    labels.append(label)
+            else:
+                img_paths, labels = self.data_selection.get_next_batch(batch_size)
+            
+            
+            self.input_label_tracking.extend(labels)
+            
+            yield self.data_aug.preprocess_images(np.array(img_paths), np.array(labels), data_augmentation, test_gen)
+            
+    
 
 if __name__ == "__main__":   
-    obj= MyImageDataGenerator()
+    obj= DataAugmentation()
     obj.run()

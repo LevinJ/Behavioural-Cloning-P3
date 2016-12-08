@@ -101,12 +101,31 @@ class Visualzie(PrepareData):
         ax.set_xticklabels([])
         ax.set_yticklabels([])
         return
+    def show_side_images(self):
+        center_img_path = './data/simulator-linux/IMG/center_2016_12_05_20_23_42_372.jpg'
+      
+        
+        left_img_path = center_img_path.replace('center', 'left')
+        
+        right_img_path = center_img_path.replace('center', 'right')
+        
+        paths = [left_img_path, center_img_path, right_img_path]
+        _, axies = plt.subplots(1, 3)
+        for i in range(len(axies)):
+            axis = axies[i]
+            image_path = paths[i]
+            img = cv2.imread(image_path, cv2.IMREAD_COLOR)
+            img = img[...,::-1] #convert from opencv bgr to standard rgb
+            axis.imshow(img)
+            axis.set_title(os.path.basename(image_path)[:-4],loc='left')
+        return
     
     def run(self):
+        self.show_side_images()
 #         self.show_image()
 #         self.show_imgs_labels()
 
-        self.show_angle()
+#         self.show_angle()
 #         self.show_prediction()
 #         self.show_batched_data_distribution()
 #         self.test_sample()
