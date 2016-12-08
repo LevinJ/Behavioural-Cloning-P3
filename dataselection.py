@@ -23,6 +23,7 @@ class Bin(object):
 
 class DataSelection(object):
     def __init__(self, record_df):
+        #record_df, data frame with center_imgage and steering_angle column
         self.record_df = record_df
 
         bin_names = ['1.1',

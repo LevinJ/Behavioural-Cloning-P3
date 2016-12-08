@@ -19,9 +19,9 @@ class PrepareData(object):
     def __init__(self, use_recoverydata = False):
         self.use_recoverydata = use_recoverydata
         self.load_records()
+        self.add_side_images_records()
         self.split_train_val()
-        
-       
+    
         return   
     def load_records(self):
       
@@ -38,6 +38,32 @@ class PrepareData(object):
         
         self.record_df = pd.concat([center_df, left_df, right_df], ignore_index=True)
         
+        
+        return
+    def get_sideimaegdf(self,df, ajust_angel):
+        resdf = df.copy()
+        resdf['steering_angle'] = resdf['steering_angle'] + ajust_angel
+        current_column_name = resdf.columns.values[0]
+        resdf=resdf.rename(columns = {current_column_name:'center_image'})
+        return resdf
+    def add_side_images_records(self):
+        #ceter image with zero, left and right side images
+        center_zero_left = self.record_df[self.record_df['steering_angle'] == 0][['left_image', 'steering_angle']]
+        center_zero_left = self.get_sideimaegdf(center_zero_left, -0.08)
+        center_zero_right = self.record_df[self.record_df['steering_angle'] == 0][['right_image', 'steering_angle']]
+        center_zero_right = self.get_sideimaegdf(center_zero_right, 0.08)
+        
+        #cetenr image with negative steering angel, use left image
+        center_negative_left = self.record_df[self.record_df['steering_angle'] < 0][['left_image', 'steering_angle']]
+        center_negative_left = self.get_sideimaegdf(center_negative_left, -0.08)
+        
+        #center image with postive steering angle, use right image
+        center_positive_right = self.record_df[self.record_df['steering_angle'] > 0][['right_image', 'steering_angle']]
+        center_positive_right = self.get_sideimaegdf(center_positive_right, 0.08)
+        
+        self.record_df = self.record_df[['center_imgage', 'steering_angle']]
+        #append left side images data
+        self.record_df = pd.concat([self.record_df, center_zero_left, center_zero_right, center_negative_left, center_positive_right], ignore_index=False)
         return
     def load_record(self, filename):
         column_names=['center_imgage', 'left_image', 'right_image', 'steering_angle', 'throttle', 'break', 'speed']
