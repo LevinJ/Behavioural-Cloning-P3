@@ -16,7 +16,7 @@ from dataselection import DataSelection
 
 
 class PrepareData(object):
-    def __init__(self, use_recoverydata = True, use_side_images = False):
+    def __init__(self, use_recoverydata = True, use_side_images = True):
         self.use_recoverydata = use_recoverydata
         self.load_records()
         if use_side_images:
@@ -49,6 +49,7 @@ class PrepareData(object):
 #         adjust_angle = np.random.uniform(low = adjust_angle/2, high=adjust_angle, size = len(df))
         resdf = df.copy()
         resdf['steering_angle'] = resdf['steering_angle'] + adjust_angle
+        #rename the column from left/rigth to center
         current_column_name = resdf.columns.values[0]
         resdf=resdf.rename(columns = {current_column_name:'center_image'})
         resdf['center_image'] = resdf['center_image'].str.replace(' ', '')

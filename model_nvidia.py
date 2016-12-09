@@ -7,6 +7,7 @@ from myimagedatagenerator import PrepareData
 from keras.optimizers import Adam
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 
@@ -75,11 +76,11 @@ class NvidiaModel(object):
       
         
         
-        nb_epoch =3
+        nb_epoch =2
         
         #train fully connected layer  
 #         samples_per_epoch =  prepare_data.y_train.shape[0]
-        samples_per_epoch = 9187 + 9187
+        samples_per_epoch = np.array([51604, 0, 59414]).sum()
         self.model.fit_generator(train_gen_func, samples_per_epoch=samples_per_epoch, nb_epoch=nb_epoch, verbose=2, callbacks=[], 
                             validation_data=val_gen_func, nb_val_samples=prepare_data.y_val.shape[0])
         with open("model.json", "w") as text_file:

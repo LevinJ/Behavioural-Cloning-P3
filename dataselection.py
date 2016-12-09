@@ -29,7 +29,7 @@ class DataSelection(object):
         bin_names = ['1.1',
                      '0.000001','-0.000001',
                     '-1.1']
-        self.bin_probablity = np.array([9187, 0, 9187]).astype(np.float32)
+        self.bin_probablity = np.array([51604, 0, 59414]).astype(np.float32)
         self.bin_probablity = self.bin_probablity/sum(self.bin_probablity)
         temp = []
         for i in range(len(bin_names) -1):
