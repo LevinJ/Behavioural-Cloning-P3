@@ -29,7 +29,7 @@ class DataSelection(object):
         bin_names = ['1.1',
                      '0.000001','-0.000001',
                     '-1.1']
-        self.bin_probablity = [0.4, 0.2, 0.4]
+        self.bin_probablity = [0.45, 0.1, 0.45]
         temp = []
         for i in range(len(bin_names) -1):
             item = '/'.join([bin_names[i+1], bin_names[i]])

@@ -9,12 +9,13 @@ from myimagedatagenerator import PrepareData
 from keras.models import model_from_json
 from utility.vis_utils import vis_grid_withlabels
 import cv2
+from sklearn.metrics import mean_absolute_error
 
 
 
 class Visualzie(PrepareData):
     def __init__(self):
-        PrepareData.__init__(self, use_recoverydata = True, use_side_images = True)
+        PrepareData.__init__(self)
         return
 #     def load_records(self):
 #         filename = './data/driving_log.csv'
@@ -40,6 +41,7 @@ class Visualzie(PrepareData):
         vis_grid_withlabels(imgs, labels)    
         return
     def show_prediction(self):
+        self.test_sample()
 
         with open('model.json', 'r') as jfile:
             json_string = jfile.read()
@@ -50,14 +52,15 @@ class Visualzie(PrepareData):
         
         generator = self.get_generator(self.df).generate_batch( batch_size=16)
         val_samples = self.y.shape[0]
-        y_prd = model.predict_generator(generator, val_samples)
-        self.record_df['steering_angle_pred'] = y_prd.reshape(-1)
+        y_pred = model.predict_generator(generator, val_samples)
+        print("mean absolute error: {:.3f}".format(mean_absolute_error(self.y, y_pred)))
+        self.record_df['steering_angle_pred'] = y_pred.reshape(-1)
         self.record_df[['steering_angle','steering_angle_pred']].plot()
         
         return
     def test_sample(self):
-        self.load_records()
-        self.load_images()
+#         self.load_records()
+#         self.load_images()
         with open('model.json', 'r') as jfile:
             json_string = jfile.read()
             model = model_from_json(json_string)
@@ -65,11 +68,12 @@ class Visualzie(PrepareData):
         model.compile("adam", "mse")
         model.load_weights('model.h5')
         
-        generator = self.generate_batch(self.X_sample, self.y_sample, batch_size=32)
+        generator = self.get_generator(self.sampledf).generate_batch( batch_size=16)
         val_samples = self.y_sample.shape[0]
-        y_prd = model.predict_generator(generator, val_samples)
-        print(self.y_sample)
-        print(y_prd)
+        y_pred = model.predict_generator(generator, val_samples)
+        print("true labels {}".format(self.y_sample))
+        print("predicted labels {}".format(y_pred.reshape(-1)))
+        print("mean absolute error: {:.3f}".format(mean_absolute_error(self.y_sample, y_pred)))
         
         return
     def show_batched_data_distribution(self):
@@ -102,7 +106,7 @@ class Visualzie(PrepareData):
         ax.set_yticklabels([])
         return
     def show_side_images(self):
-        center_img_path = './data/simulator-linux/IMG/center_2016_12_09_06_08_37_544.jpg'
+        center_img_path = './data/simulator-linux/IMG/center_2016_12_09_06_08_47_642.jpg'
         
 #         center_img_path = '/home/levin/workspace/carnd/behavioural-cloning-p3/data/simulator-linux/IMG/center_2016_12_05_20_26_51_925.jpg'
       
@@ -128,10 +132,12 @@ class Visualzie(PrepareData):
 #         self.show_image()
 #         self.show_imgs_labels()
 
-        self.show_angle()
-#         self.show_prediction()
-#         self.show_batched_data_distribution()
+#         self.show_angle()
+        self.show_prediction()
 #         self.test_sample()
+
+#         self.show_batched_data_distribution()
+        
         plt.show()
         return
     
