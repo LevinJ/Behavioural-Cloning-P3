@@ -16,23 +16,28 @@ from dataselection import DataSelection
 
 
 class PrepareData(object):
-    def __init__(self, use_recoverydata = False):
+    def __init__(self, use_recoverydata = False, use_side_images = False):
         self.use_recoverydata = use_recoverydata
         self.load_records()
-        self.add_side_images_records()
+        if use_side_images:
+            self.add_side_images_records()
         self.split_train_val()
     
         return   
     def load_records(self):
       
+        #this needs to be commted out during normal application running
+#         self.record_df = self.load_record('./data/simulator-linux/driving_log.csv')
+#         return self.record_df
         
         center_df = self.load_record('./data/simulator-linux/driving_log_center.csv')
-        left_df = self.load_record('./data/simulator-linux/driving_log_center.csv')
-        right_df = self.load_record('./data/simulator-linux/driving_log_center.csv')
+        
         
         if not self.use_recoverydata:
             self.record_df = center_df
             return
+        left_df = self.load_record('./data/simulator-linux/driving_log_left.csv')
+        right_df = self.load_record('./data/simulator-linux/driving_log_right.csv')
         left_df = left_df[left_df['steering_angle'] > 0]
         right_df = right_df[right_df['steering_angle'] < 0]
         
@@ -49,22 +54,24 @@ class PrepareData(object):
         return resdf
     def add_side_images_records(self):
         #ceter image with zero, left and right side images
-        center_zero_left = self.record_df[self.record_df['steering_angle'] == 0][['left_image', 'steering_angle']]
-        center_zero_left = self.get_sideimaegdf(center_zero_left, -0.08)
-        center_zero_right = self.record_df[self.record_df['steering_angle'] == 0][['right_image', 'steering_angle']]
-        center_zero_right = self.get_sideimaegdf(center_zero_right, 0.08)
+        zero_left = self.record_df[self.record_df['steering_angle'] == 0][['left_image', 'steering_angle']]
+        zero_left = self.get_sideimaegdf(zero_left, -0.08)
+        zero_right = self.record_df[self.record_df['steering_angle'] == 0][['right_image', 'steering_angle']]
+        zero_right = self.get_sideimaegdf(zero_right, 0.08)
         
         #cetenr image with negative steering angel, use left image
-        center_negative_left = self.record_df[self.record_df['steering_angle'] < 0][['left_image', 'steering_angle']]
-        center_negative_left = self.get_sideimaegdf(center_negative_left, -0.08)
+        negative_left = self.record_df[self.record_df['steering_angle'] < 0][['left_image', 'steering_angle']]
+        negative_left = self.get_sideimaegdf(negative_left, -0.08)
         
         #center image with postive steering angle, use right image
-        center_positive_right = self.record_df[self.record_df['steering_angle'] > 0][['right_image', 'steering_angle']]
-        center_positive_right = self.get_sideimaegdf(center_positive_right, 0.08)
+        positive_right = self.record_df[self.record_df['steering_angle'] > 0][['right_image', 'steering_angle']]
+        positive_right = self.get_sideimaegdf(positive_right, 0.08)
+        
+       
         
         self.record_df = self.record_df[['center_image', 'steering_angle']]
         #append left side images data
-        self.record_df = pd.concat([self.record_df, center_zero_left, center_zero_right, center_negative_left, center_positive_right], ignore_index=False)
+        self.record_df = pd.concat([self.record_df, zero_left, zero_right, negative_left, positive_right], ignore_index=True)
         self.record_df.to_csv('./data/validrecords.csv')
         return
     def load_record(self, filename):
@@ -79,7 +86,7 @@ class PrepareData(object):
         
 
         num_sample = self.X.shape[0]
-        num_test = 100# the last lap for test dataset
+        num_test = 1000# the last lap for test dataset
         
         self.X_val= self.X[:num_test]
         self.y_val = self.record_df.iloc[:num_test]['steering_angle'].values

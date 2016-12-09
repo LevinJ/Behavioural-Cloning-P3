@@ -59,7 +59,7 @@ class NvidiaModel(object):
       
         
         
-        nb_epoch =5
+        nb_epoch =10
         
         #train fully connected layer   
         self.model.fit_generator(train_gen_func, prepare_data.y_train.shape[0], nb_epoch, verbose=2, callbacks=[], 

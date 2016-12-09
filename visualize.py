@@ -14,7 +14,7 @@ import cv2
 
 class Visualzie(PrepareData):
     def __init__(self):
-        PrepareData.__init__(self, use_recoverydata = True)
+        PrepareData.__init__(self, use_recoverydata = True, use_side_images = True)
         return
 #     def load_records(self):
 #         filename = './data/driving_log.csv'
@@ -23,9 +23,9 @@ class Visualzie(PrepareData):
 #         return
     def show_angle(self):
         print(self.record_df[['steering_angle']].describe())
-#         self.record_df[['steering_angle']].plot()
+        self.record_df[['steering_angle']].plot()
         plt.legend(loc='best')
-        self.record_df[['steering_angle']].hist()
+        self.record_df[['steering_angle']].hist(bins=20)
         return
     def show_imgs_labels(self):
         generator = self.get_generator(self.df, select_bybin=False)
