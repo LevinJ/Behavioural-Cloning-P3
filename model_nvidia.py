@@ -16,7 +16,7 @@ class NvidiaModel(object):
         return
     def setup_model(self):
         model = Sequential()
-        model.add(Convolution2D(24, 5, 5, border_mode='valid',  subsample=(2,2), input_shape=(160, 320,3)))
+        model.add(Convolution2D(24, 5, 5, border_mode='valid',  subsample=(2,2), input_shape=(80, 160, 3)))
         model.add(BatchNormalization())
         model.add(Activation('relu'))
         model.add(Convolution2D(36, 5, 5, border_mode='valid',  subsample=(2,2)))

@@ -46,7 +46,7 @@ class PrepareData(object):
         
         return
     def get_sideimaegdf(self,df, adjust_angle):
-        adjust_angle = np.random.uniform(low = adjust_angle/2, high=adjust_angle, size = len(df))
+#         adjust_angle = np.random.uniform(low = adjust_angle/2, high=adjust_angle, size = len(df))
         resdf = df.copy()
         resdf['steering_angle'] = resdf['steering_angle'] + adjust_angle
         current_column_name = resdf.columns.values[0]
@@ -181,6 +181,7 @@ class DataAugmentation(object):
             #load the image in PIL format
 #             img = keras.preprocessing.image.load_img(image_path)
             img = cv2.imread(image_path, cv2.IMREAD_COLOR)
+            img = cv2.resize(img, None, fx=0.5, fy=0.5)
             if data_augmentation:
                 img, label, title = self.transform_image(img, labels[i])  
                 title = ','.join([str(labels[i]), title, os.path.basename(image_path)[:-4]])

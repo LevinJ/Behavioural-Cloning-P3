@@ -117,6 +117,7 @@ class Visualzie(PrepareData):
             axis = axies[i]
             image_path = paths[i]
             img = cv2.imread(image_path, cv2.IMREAD_COLOR)
+            img = cv2.resize(img, None, fx=0.5, fy=0.5)
             img = img[...,::-1] #convert from opencv bgr to standard rgb
             axis.imshow(img)
             axis.set_title(os.path.basename(image_path)[:-4],loc='left')
