@@ -15,7 +15,7 @@ class NvidiaModel(object):
        
         return
     def setup_model(self):
-        drop_out = 0.5
+        drop_out = 0.0
         model = Sequential()
         model.add(Convolution2D(24, 5, 5, border_mode='valid',  subsample=(2,2), input_shape=(80, 160, 3)))
         model.add(BatchNormalization())
@@ -75,10 +75,12 @@ class NvidiaModel(object):
       
         
         
-        nb_epoch =5
+        nb_epoch =3
         
-        #train fully connected layer   
-        self.model.fit_generator(train_gen_func, prepare_data.y_train.shape[0], nb_epoch, verbose=2, callbacks=[], 
+        #train fully connected layer  
+#         samples_per_epoch =  prepare_data.y_train.shape[0]
+        samples_per_epoch = 9187 + 9187
+        self.model.fit_generator(train_gen_func, samples_per_epoch=samples_per_epoch, nb_epoch=nb_epoch, verbose=2, callbacks=[], 
                             validation_data=val_gen_func, nb_val_samples=prepare_data.y_val.shape[0])
         with open("model.json", "w") as text_file:
             text_file.write(self.model.to_json())

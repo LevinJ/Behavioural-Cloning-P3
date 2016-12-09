@@ -16,7 +16,7 @@ from dataselection import DataSelection
 
 
 class PrepareData(object):
-    def __init__(self, use_recoverydata = False, use_side_images = False):
+    def __init__(self, use_recoverydata = True, use_side_images = False):
         self.use_recoverydata = use_recoverydata
         self.load_records()
         if use_side_images:
@@ -90,7 +90,7 @@ class PrepareData(object):
         
 
         num_sample = self.X.shape[0]
-        num_test = 6000*2# the two laps for test dataset
+        num_test = 6000# the first lap for test dataset
         
         self.X_val= self.X[:num_test]
         self.y_val = self.record_df.iloc[:num_test]['steering_angle'].values

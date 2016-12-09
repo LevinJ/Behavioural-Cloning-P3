@@ -29,7 +29,8 @@ class DataSelection(object):
         bin_names = ['1.1',
                      '0.000001','-0.000001',
                     '-1.1']
-        self.bin_probablity = [0.45, 0.1, 0.45]
+        self.bin_probablity = np.array([9187, 0, 9187]).astype(np.float32)
+        self.bin_probablity = self.bin_probablity/sum(self.bin_probablity)
         temp = []
         for i in range(len(bin_names) -1):
             item = '/'.join([bin_names[i+1], bin_names[i]])
@@ -124,8 +125,8 @@ class DataSelection(object):
         for i in range(len(self.bin_names)):
             print('{}: {}, {:.2f}'.format(self.bin_names[i], bin_sample_num[i], bin_sample_num[i]/float(sum(bin_sample_num))))
         #test next batch
-#         labels = self.test_select_bybin()
-        labels = self.test_get_next_batch()     
+        labels = self.test_select_bybin()
+#         labels = self.test_get_next_batch()     
         df = pd.DataFrame(labels, columns=['labels'])
         print(df.describe())
         df.hist(bins=20)
