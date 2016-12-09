@@ -102,8 +102,9 @@ class Visualzie(PrepareData):
         ax.set_yticklabels([])
         return
     def show_side_images(self):
-#         center_img_path = './data/simulator-linux/IMG/center_2016_12_05_20_26_51_925.jpg'
-        center_img_path = '/home/levin/workspace/carnd/behavioural-cloning-p3/data/simulator-linux/IMG/center_2016_12_05_20_26_51_925.jpg'
+        center_img_path = './data/simulator-linux/IMG/center_2016_12_09_06_08_37_544.jpg'
+        
+#         center_img_path = '/home/levin/workspace/carnd/behavioural-cloning-p3/data/simulator-linux/IMG/center_2016_12_05_20_26_51_925.jpg'
       
         
         left_img_path = center_img_path.replace('center', 'left')

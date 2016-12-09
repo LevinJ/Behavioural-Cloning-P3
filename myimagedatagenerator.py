@@ -38,16 +38,17 @@ class PrepareData(object):
             return
         left_df = self.load_record('./data/simulator-linux/driving_log_left.csv')
         right_df = self.load_record('./data/simulator-linux/driving_log_right.csv')
-        left_df = left_df[left_df['steering_angle'] > 0]
+        left_df = left_df[(left_df['steering_angle'] > 0) & (left_df['steering_angle'] < 0.8)]
         right_df = right_df[right_df['steering_angle'] < 0]
         
         self.record_df = pd.concat([center_df, left_df, right_df], ignore_index=True)
         
         
         return
-    def get_sideimaegdf(self,df, ajust_angel):
+    def get_sideimaegdf(self,df, adjust_angle):
+        adjust_angle = np.random.uniform(low = adjust_angle/2, high=adjust_angle, size = len(df))
         resdf = df.copy()
-        resdf['steering_angle'] = resdf['steering_angle'] + ajust_angel
+        resdf['steering_angle'] = resdf['steering_angle'] + adjust_angle
         current_column_name = resdf.columns.values[0]
         resdf=resdf.rename(columns = {current_column_name:'center_image'})
         resdf['center_image'] = resdf['center_image'].str.replace(' ', '')

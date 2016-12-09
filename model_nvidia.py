@@ -51,15 +51,16 @@ class NvidiaModel(object):
         return
     
     def train_model(self):
-        prepare_data = PrepareData(use_recoverydata = True)
+        prepare_data = PrepareData(use_recoverydata = True, use_side_images = True)
         batch_size = 16
         train_gen = prepare_data.get_generator(prepare_data.traindf, select_bybin=False)
         train_gen_func = train_gen.generate_batch( batch_size=batch_size, data_augmentation= False)
+        
         val_gen_func = prepare_data.get_generator(prepare_data.valdf).generate_batch( batch_size=batch_size)
       
         
         
-        nb_epoch =10
+        nb_epoch =2
         
         #train fully connected layer   
         self.model.fit_generator(train_gen_func, prepare_data.y_train.shape[0], nb_epoch, verbose=2, callbacks=[], 
