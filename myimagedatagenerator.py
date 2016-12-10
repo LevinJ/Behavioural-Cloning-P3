@@ -203,7 +203,7 @@ class DataAugmentation(object):
             return (imgs, titles)
         else:
             imgs = imgs.astype(np.float32)
-            preprocess_input(imgs)
+#             preprocess_input(imgs)
             return (imgs, labels)
    
     def show_img_compare(self, before_img, before_title, after_img, after_title):

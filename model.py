@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath('..'))
 from keras.models import Sequential
-from keras.layers import Dense, Activation,Convolution2D, Flatten,BatchNormalization,SpatialDropout2D,Dropout
+from keras.layers import Dense, Activation,Convolution2D, Flatten,BatchNormalization,SpatialDropout2D,Dropout,Lambda
 from myimagedatagenerator import PrepareData
 from keras.optimizers import Adam
 import pandas as pd
@@ -16,9 +16,12 @@ class NvidiaModel(object):
        
         return
     def setup_model(self):
-        drop_out = 0.0
+        drop_out = 0.1
         model = Sequential()
-        model.add(Convolution2D(24, 5, 5, border_mode='valid',  subsample=(2,2), input_shape=(80, 160, 3)))
+        model.add(Lambda(lambda x: x/127.5 - 1.,
+         input_shape=(80, 160, 3),
+         output_shape=(80, 160, 3)))
+        model.add(Convolution2D(24, 5, 5, border_mode='valid',  subsample=(2,2)))
         model.add(BatchNormalization())
         model.add(Activation('relu'))
         model.add(Convolution2D(36, 5, 5, border_mode='valid',  subsample=(2,2)))
@@ -76,11 +79,11 @@ class NvidiaModel(object):
       
         
         
-        nb_epoch =2
+        nb_epoch =1
         
         #train fully connected layer  
 #         samples_per_epoch =  prepare_data.y_train.shape[0]
-        samples_per_epoch = np.array([51604, 0, 59414]).sum()
+        samples_per_epoch = train_gen.data_selection.slected_samples.sum()
         self.model.fit_generator(train_gen_func, samples_per_epoch=samples_per_epoch, nb_epoch=nb_epoch, verbose=2, callbacks=[], 
                             validation_data=val_gen_func, nb_val_samples=prepare_data.y_val.shape[0])
         with open("model.json", "w") as text_file:

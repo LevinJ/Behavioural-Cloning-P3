@@ -13,7 +13,7 @@ class Bin(object):
         
         min_val,max_val = bin_name.split('/')
         max_val,min_val = float(max_val),float(min_val)
-        bselected = (all_samples >min_val ) & ( all_samples <=max_val)
+        bselected = (all_samples >=min_val ) & ( all_samples <max_val)
         self.samples = np.where(bselected == True)[0]
         
         return
@@ -26,14 +26,18 @@ class DataSelection(object):
         #record_df, data frame with center_image and steering_angle column
         self.record_df = record_df
 
-        bin_names = ['1.1',
-                     '0.000001','-0.000001',
-                    '-1.1']
-        self.bin_probablity = np.array([51604, 0, 59414]).astype(np.float32)
+        bin_names = [-1.1,-0.2,-0.08,
+                     -0.000001,0.000001,
+                     0.080001,0.2, 1.1]
+        bin_names = [str(item) for item in bin_names]
+        self.slected_samples = np.array([15896*1.2,11828,10000,5000, 10000, 10080, 9953])
+        
+        self.bin_probablity = self.slected_samples.astype(np.float32)
+        
         self.bin_probablity = self.bin_probablity/sum(self.bin_probablity)
         temp = []
         for i in range(len(bin_names) -1):
-            item = '/'.join([bin_names[i+1], bin_names[i]])
+            item = '/'.join([bin_names[i], bin_names[i+1]])
             temp.append(item)
         bin_names = temp
 #         self.current_bin_index = 0
@@ -123,7 +127,10 @@ class DataSelection(object):
         for bin_name in self.bin_names:
             bin_sample_num.append(self.bin_dict[bin_name].samples.shape[0])
         for i in range(len(self.bin_names)):
-            print('{}: {}, {:.2f}'.format(self.bin_names[i], bin_sample_num[i], bin_sample_num[i]/float(sum(bin_sample_num))))
+            print('{}: {}, original {:.2f}, new {:.2f}'.format(self.bin_names[i], bin_sample_num[i], 
+                                                  bin_sample_num[i]/float(sum(bin_sample_num)),
+                                                  self.bin_probablity[i]))
+        print("overall sampel number {}".format(self.slected_samples.sum()))
         #test next batch
         labels = self.test_select_bybin()
 #         labels = self.test_get_next_batch()     
