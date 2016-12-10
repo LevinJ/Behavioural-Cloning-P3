@@ -11,7 +11,7 @@ In this project, we will use what we've learned about deep neural networks and c
 The final model can drive the car succesfully in track 1. (https://youtu.be/JmJUB54CtmU)
 
 ### Model Architecture
-This project basically use the architecture by Nvidia paper (https://review.udacity.com/#!/rubrics/432/view). Specifically it has below layers:
+This project basically uses the architecture from Nvidia paper (https://review.udacity.com/#!/rubrics/432/view). Specifically it has below layers:
 
 1. input layer, 3@80x160
 2. Normalization layer, 3@80x160
@@ -29,7 +29,7 @@ This project basically use the architecture by Nvidia paper (https://review.udac
 
 ### Training Strategy
 
-*Training data collection  
+1. Training data collection  
 Training data collection is the most critical aspect determining the success/failure of the model in this project.
   - drive a couple of laps of nice, centerline driving
   - drive to the left of the road, and re-center, but only take recorded images that do the recovery (steering angel being positive)
@@ -41,25 +41,25 @@ Training data collection is the most critical aspect determining the success/fai
 
 
 
-*Train/validation/test splits  
+2. Train/validation/test splits  
 the first lap (6000) serve as validation dataset, the rest as training data. the model is eventualy tested in the simulator
 
-*Regularization methods  
+3. Regularization methods  
 Dropout is used in an attempt to regularize the model. On the other side, the model is bound to overfit since the valdiation dataset (the first lap of driving) comes from the same track as the training dataset. To build a model that generalize well, we will need to add driving images from different lighting/evnironment.
 
-*Optimization methods  
+4. Optimization methods  
 Default Adam optimiser from Keras package is used.
 
 
 ### Implementation Details
 
-*Data preparation  
+1. Data preparation  
 Image path and labels loading, train/val split is implemented by PrepareData class in myimagedatagenerator file
-* Data selection  
+2. Data selection  
 Selecting the right proportion of training images from available images is implemented by DataSelection class in file dataselection  
-* Image generator  
+3. Image generator  
 An image generator is developed to allow us to generate batches of images and feed into network on the fly , without having to store all the images in memory in advance. It's implemented by MyImageDataGenerator class in myimagedatagenerator file
-* Data augmentation  
+4. Data augmentation  
 flipping, shift, ratation is implemented by DataAugmentation in in myimagedatagenerator file. This trick is not used at the end since we've already got engouh images to train track 1 by driving around the track.
 
 
