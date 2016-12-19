@@ -16,7 +16,7 @@ from dataselection import DataSelection
 
 
 class PrepareData(object):
-    def __init__(self, use_recoverydata = True, use_side_images = True):
+    def __init__(self, use_recoverydata = True, use_side_images = False):
         self.use_recoverydata = use_recoverydata
         self.load_records()
         if use_side_images:
